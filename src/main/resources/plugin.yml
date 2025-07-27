@@ -1,0 +1,48 @@
+name: AcidRain
+version: 1.4.0
+main: org.acidRain.acidRain.AcidRain
+api-version: "1.21"
+authors: [Flaim and SubTeams]
+description: Advanced acid rain system with auto-expanding borders and protection suits
+website: https://discord.gg/gV2KmUbqXC
+
+commands:
+  acidrain:
+    description: Основная команда плагина AcidRain
+    usage: /acidrain [on|off|set|expand|status]
+    permission: acidrain.admin
+  aon:
+    description: Включить кислотные дожди
+    usage: /aon
+    permission: acidrain.admin
+  aoff:
+    description: Выключить кислотные дожди
+    usage: /aoff
+    permission: acidrain.admin
+  aset:
+    description: Установить границу кислотных осадков
+    usage: /aset <размер>
+    permission: acidrain.admin
+  aexpand:
+    description: Расширить границу
+    usage: /aexpand <блоки> <секунды>
+    permission: acidrain.admin
+  astatus:
+    description: Показать текущий статус
+    usage: /astatus
+    permission: acidrain.admin
+  asuit:
+    description: Получить защитный костюм от кислотных дождей
+    usage: /asuit
+    permission: acidrain.admin
+
+permissions:
+  acidrain.admin:
+    description: Полный доступ к командам управления
+    default: op
+  acidrain.notify:
+    description: Получать уведомления о расширении границы
+    default: true
+  acidrain.suit:
+    description: Доступ к защитному костюму
+    default: op
