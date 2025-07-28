@@ -28,6 +28,14 @@ protectionSuit:
   duration: 60         # Длительность защиты в минутах
   color: 50,200,50     # RGB цвет брони
 
+# Настройки кислотного дождя
+acidRainEffects:
+  enabled: true
+  rainIntensity: 20
+  rainRadius: 3.0
+  soundEnabled: true
+  soundChance: 5
+
 # Сообщения
 notifications:
   expandMessage: "&6[AcidRain] &cГраница расширяется на &e{blocks} &cблоков за &e{minutes} &cминут!"
