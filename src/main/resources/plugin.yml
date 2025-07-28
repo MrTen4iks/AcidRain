@@ -1,9 +1,9 @@
 name: AcidRain
-version: 1.4.0
+version: 1.0b
 main: org.acidRain.acidRain.AcidRain
 api-version: "1.21"
 authors: [Flaim and SubTeams]
-description: Advanced acid rain system with auto-expanding borders and protection suits
+description: "Advanced acid rain system with auto-expanding borders and protection suits. Join our Discord: https://discord.gg/gV2KmUbqXC"
 website: https://discord.gg/gV2KmUbqXC
 
 commands:
@@ -35,6 +35,14 @@ commands:
     description: Получить защитный костюм от кислотных дождей
     usage: /asuit
     permission: acidrain.admin
+  arecipes:
+    description: Показать информацию о рецептах
+    usage: /arecipes
+    permission: acidrain.admin
+  atime:
+    description: Проверить оставшееся время защитного костюма
+    usage: /atime
+    permission: acidrain.suit
 
 permissions:
   acidrain.admin:

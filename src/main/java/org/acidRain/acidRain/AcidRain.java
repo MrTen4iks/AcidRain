@@ -2,6 +2,7 @@ package org.acidRain.acidRain;
 
 import org.bukkit.*;
 import org.bukkit.command.*;
+import org.bukkit.command.TabCompleter;
 import org.bukkit.configuration.file.*;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.*;
@@ -27,7 +28,7 @@ import java.util.Random;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 
-public final class AcidRain extends JavaPlugin implements Listener, CommandExecutor {
+public final class AcidRain extends JavaPlugin implements Listener, CommandExecutor, TabCompleter {
 
     private int dangerZoneStart;
     private int zone1Radius = 300;
@@ -39,10 +40,10 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     private FileConfiguration config;
     private File configFile;
     private final Map<UUID, Long> lastEffectTime = new HashMap<>();
-    private final Map<UUID, Long> lastBorderNotify = new HashMap<>();
     private final Map<UUID, Integer> currentZone = new HashMap<>();
     private final Map<UUID, Long> suitExpirationTimes = new HashMap<>();
     private final Map<UUID, Boolean> hasFullSuit = new HashMap<>();
+    private final Map<UUID, Long> suitPauseTimes = new HashMap<>();
     private BukkitTask expansionTask;
     private BukkitTask autoExpandTask;
 
@@ -79,7 +80,20 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             }
         }.runTaskTimer(this, 0L, 20L);
 
-        getLogger().info(ChatColor.GREEN + "AcidRain включен! Граница: " + dangerZoneStart + " блоков");
+        // Простой ASCII-арт логотип для консоли
+        getLogger().info("");
+        getLogger().info("================================================================");
+        getLogger().info("                    ACID RAIN SYSTEM");
+        getLogger().info("================================================================");
+        getLogger().info("                    Advanced Acid Rain System v1.0b");
+        getLogger().info("                    Граница: " + dangerZoneStart + " блоков");
+        getLogger().info("                    Discord: https://discord.gg/gV2KmUbqXC");
+        getLogger().info("                    Авторы: Flaim and SubTeams");
+        getLogger().info("================================================================");
+        getLogger().info("");
+        getLogger().info("✅ AcidRain успешно загружен!");
+        getLogger().info("💬 Присоединяйтесь к нашему Discord: https://discord.gg/gV2KmUbqXC");
+        getLogger().info("");
     }
 
     @Override
@@ -87,7 +101,17 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         saveProtectionTimes();
         cancelTasks();
         savePluginConfig();
-        getLogger().info("AcidRain выключен");
+        getLogger().info("");
+        getLogger().info("================================================================");
+        getLogger().info("                    ACID RAIN SYSTEM");
+        getLogger().info("================================================================");
+        getLogger().info("                    Advanced Acid Rain System v1.0b");
+        getLogger().info("                              ПЛАГИН ВЫКЛЮЧЕН");
+        getLogger().info("                    Discord: https://discord.gg/gV2KmUbqXC");
+        getLogger().info("================================================================");
+        getLogger().info("");
+        getLogger().info("❌ AcidRain выключен!");
+        getLogger().info("");
     }
 
     private void saveProtectionTimes() {
@@ -105,9 +129,18 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         ConfigurationSection section = config.getConfigurationSection("protectionTimes");
         if (section != null) {
             for (String key : section.getKeys(false)) {
-                UUID uuid = UUID.fromString(key);
-                long expireTime = section.getLong(key);
-                suitExpirationTimes.put(uuid, expireTime);
+                try {
+                    UUID uuid = UUID.fromString(key);
+                    long expireTime = section.getLong(key);
+                    // Проверяем, что время не истекло
+                    if (System.currentTimeMillis() < expireTime) {
+                        suitExpirationTimes.put(uuid, expireTime);
+                    } else {
+                        getLogger().info("Удаляем истекшую защиту для игрока: " + uuid);
+                    }
+                } catch (IllegalArgumentException e) {
+                    getLogger().warning("Некорректный UUID в конфиге: " + key);
+                }
             }
         }
     }
@@ -125,70 +158,88 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     }
 
     private void registerCommands() {
-        String[] commands = {"acidrain", "aon", "aoff", "aset", "aexpand", "astatus", "asuit"};
+        String[] commands = {"acidrain", "aon", "aoff", "aset", "aexpand", "astatus", "asuit", "arecipes", "atime"};
         for (String cmd : commands) {
             PluginCommand command = getCommand(cmd);
             if (command != null) {
                 command.setExecutor(this);
+                command.setTabCompleter(this);
             }
         }
     }
 
     private void registerRecipes() {
-        ShapedRecipe helmetRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_helmet"),
-                createArmorPiece(Material.LEATHER_HELMET, "Кислотостойкий шлем"));
-        helmetRecipe.shape("LLL", "L L");
-        helmetRecipe.setIngredient('L', Material.LEATHER);
-        getServer().addRecipe(helmetRecipe);
+        try {
+            // Рецепт для шлема
+            ShapedRecipe helmetRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_helmet"),
+                    createArmorPiece(Material.LEATHER_HELMET, "Кислотостойкий шлем"));
+            helmetRecipe.shape("LLL", "L L");
+            helmetRecipe.setIngredient('L', Material.LEATHER);
+            getServer().addRecipe(helmetRecipe);
+            getLogger().info("Рецепт шлема зарегистрирован");
 
-        ShapedRecipe chestplateRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_chestplate"),
-                createArmorPiece(Material.LEATHER_CHESTPLATE, "Кислотостойкая кираса"));
-        chestplateRecipe.shape("L L", "LLL", "LLL");
-        chestplateRecipe.setIngredient('L', Material.LEATHER);
-        getServer().addRecipe(chestplateRecipe);
+            // Рецепт для кирасы
+            ShapedRecipe chestplateRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_chestplate"),
+                    createArmorPiece(Material.LEATHER_CHESTPLATE, "Кислотостойкая кираса"));
+            chestplateRecipe.shape("L L", "LLL", "LLL");
+            chestplateRecipe.setIngredient('L', Material.LEATHER);
+            getServer().addRecipe(chestplateRecipe);
+            getLogger().info("Рецепт кирасы зарегистрирован");
 
-        ShapedRecipe leggingsRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_leggings"),
-                createArmorPiece(Material.LEATHER_LEGGINGS, "Кислотостойкие поножи"));
-        leggingsRecipe.shape("LLL", "L L", "L L");
-        leggingsRecipe.setIngredient('L', Material.LEATHER);
-        getServer().addRecipe(leggingsRecipe);
+            // Рецепт для поножей
+            ShapedRecipe leggingsRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_leggings"),
+                    createArmorPiece(Material.LEATHER_LEGGINGS, "Кислотостойкие поножи"));
+            leggingsRecipe.shape("LLL", "L L", "L L");
+            leggingsRecipe.setIngredient('L', Material.LEATHER);
+            getServer().addRecipe(leggingsRecipe);
+            getLogger().info("Рецепт поножей зарегистрирован");
 
-        ShapedRecipe bootsRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_boots"),
-                createArmorPiece(Material.LEATHER_BOOTS, "Кислотостойкие ботинки"));
-        bootsRecipe.shape("L L", "L L");
-        bootsRecipe.setIngredient('L', Material.LEATHER);
-        getServer().addRecipe(bootsRecipe);
+            // Рецепт для ботинок
+            ShapedRecipe bootsRecipe = new ShapedRecipe(new NamespacedKey(this, "acidrain_boots"),
+                    createArmorPiece(Material.LEATHER_BOOTS, "Кислотостойкие ботинки"));
+            bootsRecipe.shape("L L", "L L");
+            bootsRecipe.setIngredient('L', Material.LEATHER);
+            getServer().addRecipe(bootsRecipe);
+            getLogger().info("Рецепт ботинок зарегистрирован");
 
-        ShapedRecipe fullSuitRecipe = new ShapedRecipe(
-                new NamespacedKey(this, "acidrain_full_suit"),
-                createFullProtectionSuit()
-        );
+            // Рецепт для полного костюма
+            ShapedRecipe fullSuitRecipe = new ShapedRecipe(
+                    new NamespacedKey(this, "acidrain_full_suit"),
+                    createFullProtectionSuit()
+            );
 
-        fullSuitRecipe.shape("NBT", "VEV", "LBL");
-        fullSuitRecipe.setIngredient('N', Material.NETHER_STAR);
-        fullSuitRecipe.setIngredient('B', Material.BREEZE_ROD);
-        fullSuitRecipe.setIngredient('T', Material.TOTEM_OF_UNDYING);
-        fullSuitRecipe.setIngredient('V', Material.LEATHER_HELMET);
-        fullSuitRecipe.setIngredient('E', Material.LEATHER_CHESTPLATE);
-        fullSuitRecipe.setIngredient('L', Material.LEATHER_BOOTS);
+            fullSuitRecipe.shape("NBT", "VEV", "LBL");
+            fullSuitRecipe.setIngredient('N', Material.NETHER_STAR);
+            fullSuitRecipe.setIngredient('B', Material.BREEZE_ROD);
+            fullSuitRecipe.setIngredient('T', Material.TOTEM_OF_UNDYING);
+            fullSuitRecipe.setIngredient('V', Material.LEATHER_HELMET);
+            fullSuitRecipe.setIngredient('E', Material.LEATHER_CHESTPLATE);
+            fullSuitRecipe.setIngredient('L', Material.LEATHER_BOOTS);
 
-        getServer().addRecipe(fullSuitRecipe);
+            getServer().addRecipe(fullSuitRecipe);
+            getLogger().info("Рецепт полного костюма зарегистрирован");
+            
+        } catch (Exception e) {
+            getLogger().warning("Ошибка при регистрации рецептов: " + e.getMessage());
+        }
     }
 
     private ItemStack createFullProtectionSuit() {
         ItemStack resultItem = new ItemStack(Material.NETHER_STAR);
         ItemMeta meta = resultItem.getItemMeta();
-        meta.setDisplayName(ChatColor.GREEN + "Набор защиты от кислотных дождей");
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + "Набор защиты от кислотных дождей");
 
-        PersistentDataContainer data = meta.getPersistentDataContainer();
-        data.set(new NamespacedKey(this, "full_protection_set"), PersistentDataType.INTEGER, 1);
+            PersistentDataContainer data = meta.getPersistentDataContainer();
+            data.set(new NamespacedKey(this, "full_protection_set"), PersistentDataType.INTEGER, 1);
 
-        List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.GRAY + "ПКМ - получить полный комплект брони");
-        lore.add(ChatColor.GRAY + "Защищает от всех эффектов кислотных дождей");
-        meta.setLore(lore);
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.GRAY + "ПКМ - получить полный комплект брони");
+            lore.add(ChatColor.GRAY + "Защищает от всех эффектов кислотных дождей");
+            meta.setLore(lore);
 
-        resultItem.setItemMeta(meta);
+            resultItem.setItemMeta(meta);
+        }
         return resultItem;
     }
 
@@ -318,7 +369,7 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     }
 
     private boolean isUnderOpenSky(Location loc) {
-        if (loc == null) return false;
+        if (loc == null || loc.getWorld() == null) return false;
         for (int y = loc.getBlockY() + 1; y < 256; y++) {
             Block block = loc.getWorld().getBlockAt(loc.getBlockX(), y, loc.getBlockZ());
             if (!block.isPassable()) {
@@ -331,6 +382,8 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     private void spawnZoneParticles(Player player, int zone) {
         Location loc = player.getLocation();
         World world = player.getWorld();
+        
+        if (world == null) return;
 
         if (hasFullSuit.getOrDefault(player.getUniqueId(), false) &&
                 suitExpirationTimes.containsKey(player.getUniqueId()) &&
@@ -338,6 +391,9 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             spawnProtectionParticles(player);
             return;
         }
+
+        // Создаем эффект кислотного дождя
+        spawnAcidRainEffect(world, loc, zone);
 
         switch (zone) {
             case 1:
@@ -352,7 +408,7 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             case 3:
                 world.spawnParticle(Particle.LAVA, loc, 30, 1, 1, 1);
                 world.spawnParticle(Particle.LARGE_SMOKE, loc, 25, 0.5, 0.5, 0.5);
-                world.spawnParticle(Particle.ITEM_SLIME, loc, 20, 1, 1, 1, new Particle.DustOptions(Color.RED, 1));
+                world.spawnParticle(Particle.DUST, loc, 20, 1, 1, 1, new Particle.DustOptions(Color.RED, 1));
                 break;
             case 4:
                 world.spawnParticle(Particle.FLAME, loc, 50, 0.5, 0.5, 0.5);
@@ -362,9 +418,102 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         }
     }
 
+    private void spawnAcidRainEffect(World world, Location center, int zone) {
+        // Проверяем, включены ли эффекты кислотного дождя
+        if (!config.getBoolean("acidRainEffects.enabled", true)) {
+            return;
+        }
+        
+        // Определяем интенсивность дождя в зависимости от зоны
+        int baseIntensity = config.getInt("acidRainEffects.rainIntensity", 20);
+        int rainIntensity = baseIntensity + (zone * 10); // 30, 40, 50, 60 частиц
+        
+        double baseRadius = config.getDouble("acidRainEffects.rainRadius", 3.0);
+        double radius = baseRadius + (zone * 0.5); // 3.5, 4.0, 4.5, 5.0 блоков
+        
+        // Создаем случайные позиции для капель дождя
+        Random random = new Random();
+        
+        // Создаем настоящий кислотный дождь - падающий сверху вниз
+        for (int i = 0; i < rainIntensity; i++) {
+            // Случайная позиция в небе над игроком
+            double x = center.getX() + (random.nextDouble() - 0.5) * radius * 2;
+            double z = center.getZ() + (random.nextDouble() - 0.5) * radius * 2;
+            double y = center.getY() + 15 + random.nextDouble() * 10; // Высоко в небе
+            
+            Location rainLoc = new Location(world, x, y, z);
+            
+            // Выбираем случайный зеленый цвет для капли
+            Color[] greenColors = {
+                Color.LIME,      // Ярко-зеленый
+                Color.GREEN,     // Зеленый
+                Color.fromRGB(0, 128, 0),  // Темно-зеленый
+                Color.fromRGB(50, 205, 50), // Лаймово-зеленый
+                Color.fromRGB(34, 139, 34)  // Лесной зеленый
+            };
+            
+            Color rainColor = greenColors[random.nextInt(greenColors.length)];
+            
+            // Создаем падающую каплю кислотного дождя с направлением вниз
+            world.spawnParticle(
+                Particle.DUST,
+                rainLoc,
+                1,
+                0, -1.0, 0,  // Направление строго вниз
+                0.2,
+                new Particle.DustOptions(rainColor, 0.6f)
+            );
+        }
+        
+        // Создаем туманный эффект в зоне (как будто идет дождь, но без капель)
+        int fogIntensity = rainIntensity * 2; // Больше тумана чем дождя
+        for (int i = 0; i < fogIntensity; i++) {
+            // Случайная позиция вокруг игрока на разных высотах
+            double x = center.getX() + (random.nextDouble() - 0.5) * radius * 3;
+            double z = center.getZ() + (random.nextDouble() - 0.5) * radius * 3;
+            double y = center.getY() + 1 + random.nextDouble() * 8; // От земли до 9 блоков вверх
+            
+            Location fogLoc = new Location(world, x, y, z);
+            
+            // Создаем туманные частицы разных зеленых оттенков
+            Color[] fogColors = {
+                Color.fromRGB(144, 238, 144), // Светло-зеленый
+                Color.fromRGB(152, 251, 152), // Бледно-зеленый
+                Color.fromRGB(143, 188, 143), // Темно-морской зеленый
+                Color.fromRGB(50, 205, 50),   // Лаймово-зеленый
+                Color.fromRGB(34, 139, 34)    // Лесной зеленый
+            };
+            
+            Color fogColor = fogColors[random.nextInt(fogColors.length)];
+            
+            // Создаем плавающие туманные частицы
+            world.spawnParticle(
+                Particle.DUST,
+                fogLoc,
+                1,
+                0.1, 0.1, 0.1,  // Легкое движение
+                0.05,
+                new Particle.DustOptions(fogColor, 0.3f)
+            );
+        }
+        
+        // Добавляем звуковой эффект кислотного дождя (редко)
+        if (config.getBoolean("acidRainEffects.soundEnabled", true)) {
+            int soundChance = config.getInt("acidRainEffects.soundChance", 5);
+            if (random.nextInt(100) < soundChance) {
+                float volume = 0.3f + (zone * 0.1f); // Громче в более опасных зонах
+                float pitch = 0.8f + (random.nextFloat() * 0.4f); // Случайная высота звука
+                world.playSound(center, Sound.WEATHER_RAIN, volume, pitch);
+            }
+        }
+    }
+
     private void spawnProtectionParticles(Player player) {
+        World world = player.getWorld();
+        if (world == null) return;
+        
         // Альтернативный вариант с DustOptions
-        player.getWorld().spawnParticle(
+        world.spawnParticle(
                 Particle.DUST,
                 player.getLocation().add(0, 2, 0),
                 15,
@@ -377,7 +526,7 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             double angle = Math.toRadians(i);
             double x = Math.cos(angle) * 1.5;
             double z = Math.sin(angle) * 1.5;
-            player.getWorld().spawnParticle(
+            world.spawnParticle(
                     Particle.HAPPY_VILLAGER,
                     player.getLocation().add(x, 1.5, z),
                     1,
@@ -402,14 +551,16 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         for (ItemStack item : armor) {
             if (item != null && item.hasItemMeta()) {
                 ItemMeta meta = item.getItemMeta();
-                PersistentDataContainer data = meta.getPersistentDataContainer();
+                if (meta != null) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
 
-                if (data.has(new NamespacedKey(this, "acidrain_protection"), PersistentDataType.INTEGER)) {
-                    List<String> lore = meta.getLore();
-                    if (lore != null && lore.size() >= 3) {
-                        lore.set(2, ChatColor.YELLOW + "Осталось: " + getRemainingTimeForDisplay(expireTime));
-                        meta.setLore(lore);
-                        item.setItemMeta(meta);
+                    if (data.has(new NamespacedKey(this, "acidrain_protection"), PersistentDataType.INTEGER)) {
+                        List<String> lore = meta.getLore();
+                        if (lore != null && lore.size() >= 3) {
+                            lore.set(2, ChatColor.YELLOW + "Осталось: " + getRemainingTimeForDisplay(expireTime));
+                            meta.setLore(lore);
+                            item.setItemMeta(meta);
+                        }
                     }
                 }
             }
@@ -421,9 +572,8 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         UUID playerId = player.getUniqueId();
 
         if (!wearingFullSuit && hasFullSuit.getOrDefault(playerId, false)) {
-            // Игрок снял костюм
-            suitExpirationTimes.remove(playerId);
-            hasFullSuit.put(playerId, false);
+            // Игрок снял костюм - ставим на паузу
+            pauseProtectionTimer(player);
             return;
         }
 
@@ -465,7 +615,10 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         for (ItemStack item : armor) {
             if (item == null || !item.hasItemMeta()) return false;
 
-            PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+            ItemMeta meta = item.getItemMeta();
+            if (meta == null) return false;
+
+            PersistentDataContainer data = meta.getPersistentDataContainer();
             if (!data.has(new NamespacedKey(this, "acidrain_protection"), PersistentDataType.INTEGER)) {
                 return false;
             }
@@ -480,9 +633,10 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         for (Player player : Bukkit.getOnlinePlayers()) {
             UUID playerId = player.getUniqueId();
 
-            // Проверяем только игроков с активной защитой
+            // Проверяем только игроков с активной защитой (не на паузе)
             if (hasFullSuit.getOrDefault(playerId, false) &&
-                    suitExpirationTimes.containsKey(playerId)) {
+                    suitExpirationTimes.containsKey(playerId) &&
+                    !suitPauseTimes.containsKey(playerId)) {
 
                 long expireTime = suitExpirationTimes.get(playerId);
                 if (System.currentTimeMillis() >= expireTime) {
@@ -497,12 +651,49 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     private void startProtectionTimer(Player player) {
         long duration = config.getInt("protectionSuit.duration", 60) * 60000L;
         suitExpirationTimes.put(player.getUniqueId(), System.currentTimeMillis() + duration);
-        hasFullSuit.put(player.getUniqueId(), true); // Явно устанавливаем флаг
+        hasFullSuit.put(player.getUniqueId(), true);
+        suitPauseTimes.remove(player.getUniqueId()); // Убираем паузу
         updateArmorLore(player);
+
+        // Удаляем все негативные эффекты радиации
+        clearRadiationEffects(player);
 
         // Уведомление игрока
         player.sendMessage(ChatColor.GREEN + "Защитный костюм активирован на " +
                 config.getInt("protectionSuit.duration", 60) + " минут");
+        player.sendMessage(ChatColor.GREEN + "Все эффекты радиации удалены!");
+    }
+
+    private void pauseProtectionTimer(Player player) {
+        UUID playerId = player.getUniqueId();
+        hasFullSuit.put(playerId, false);
+        suitPauseTimes.put(playerId, System.currentTimeMillis());
+        player.sendMessage(ChatColor.YELLOW + "Защитный костюм снят. Таймер поставлен на паузу.");
+    }
+
+    private void resumeProtectionTimer(Player player) {
+        UUID playerId = player.getUniqueId();
+        Long pauseTime = suitPauseTimes.get(playerId);
+        
+        if (pauseTime != null) {
+            // Вычисляем сколько времени прошло на паузе
+            long pauseDuration = System.currentTimeMillis() - pauseTime;
+            // Увеличиваем время истечения на время паузы
+            Long currentExpireTime = suitExpirationTimes.get(playerId);
+            if (currentExpireTime != null) {
+                suitExpirationTimes.put(playerId, currentExpireTime + pauseDuration);
+            }
+            suitPauseTimes.remove(playerId);
+        }
+        
+        hasFullSuit.put(playerId, true);
+        updateArmorLore(player);
+        
+        // Удаляем все негативные эффекты радиации
+        clearRadiationEffects(player);
+        
+        player.sendMessage(ChatColor.GREEN + "Защитный костюм активирован!");
+        player.sendMessage(ChatColor.GREEN + "Все эффекты радиации удалены!");
     }
 
     private void damageSuit(Player player) {
@@ -513,17 +704,22 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                 System.currentTimeMillis() >= suitExpirationTimes.get(playerId)) {
 
             for (ItemStack item : player.getInventory().getArmorContents()) {
-                if (item != null && item.hasItemMeta() &&
-                        item.getItemMeta().getPersistentDataContainer().has(
-                                new NamespacedKey(this, "acidrain_protection"),
-                                PersistentDataType.INTEGER)) {
-                    item.setAmount(0);
+                if (item != null && item.hasItemMeta()) {
+                    ItemMeta meta = item.getItemMeta();
+                    if (meta != null && meta.getPersistentDataContainer().has(
+                            new NamespacedKey(this, "acidrain_protection"),
+                            PersistentDataType.INTEGER)) {
+                        item.setAmount(0);
+                    }
                 }
             }
 
             suitExpirationTimes.remove(playerId);
             hasFullSuit.remove(playerId);
-            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            World world = player.getWorld();
+            if (world != null) {
+                player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+            }
             player.sendMessage(ChatColor.RED + "Ваш защитный костюм разрушен кислотным дождем!");
         }
     }
@@ -547,11 +743,17 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                     boolean nowWearing = checkFullSuit(player);
 
                     if (nowWearing && !wasWearing) {
+                        // Игрок надел полный костюм
                         if (!suitExpirationTimes.containsKey(player.getUniqueId())) {
+                            // Если таймера нет - начинаем новый
                             startProtectionTimer(player);
+                        } else {
+                            // Если таймер есть - возобновляем с паузы
+                            resumeProtectionTimer(player);
                         }
                     } else if (!nowWearing && wasWearing) {
-                        suitExpirationTimes.remove(player.getUniqueId());
+                        // Игрок полностью снял костюм - ставим на паузу
+                        pauseProtectionTimer(player);
                     }
                 }
             }.runTaskLater(this, 1L);
@@ -563,37 +765,45 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
             ItemStack item = event.getItem();
             if (item != null && item.hasItemMeta()) {
-                PersistentDataContainer data = item.getItemMeta().getPersistentDataContainer();
+                ItemMeta meta = item.getItemMeta();
+                if (meta != null) {
+                    PersistentDataContainer data = meta.getPersistentDataContainer();
 
-                if (data.has(new NamespacedKey(this, "full_protection_set"), PersistentDataType.INTEGER)) {
-                    event.setCancelled(true);
+                    if (data.has(new NamespacedKey(this, "full_protection_set"), PersistentDataType.INTEGER)) {
+                        event.setCancelled(true);
 
-                    Player player = event.getPlayer();
-                    if (player.getInventory().firstEmpty() == -1) {
-                        player.sendMessage(ChatColor.RED + "Недостаточно места в инвентаре!");
-                        return;
+                        Player player = event.getPlayer();
+                        if (player.getInventory().firstEmpty() == -1) {
+                            player.sendMessage(ChatColor.RED + "Недостаточно места в инвентаре!");
+                            return;
+                        }
+
+                        ItemStack helmet = createArmorPiece(Material.LEATHER_HELMET, "Кислотостойкий шлем");
+                        ItemStack chestplate = createArmorPiece(Material.LEATHER_CHESTPLATE, "Кислотостойкая кираса");
+                        ItemStack leggings = createArmorPiece(Material.LEATHER_LEGGINGS, "Кислотостойкие поножи");
+                        ItemStack boots = createArmorPiece(Material.LEATHER_BOOTS, "Кислотостойкие ботинки");
+
+                        String[] colorParts = config.getString("protectionSuit.color", "50,200,50").split(",");
+                        Color color = Color.fromRGB(
+                                Integer.parseInt(colorParts[0].trim()),
+                                Integer.parseInt(colorParts[1].trim()),
+                                Integer.parseInt(colorParts[2].trim())
+                        );
+
+                        setArmorColor(helmet, color);
+                        setArmorColor(chestplate, color);
+                        setArmorColor(leggings, color);
+                        setArmorColor(boots, color);
+
+                        player.getInventory().addItem(helmet, chestplate, leggings, boots);
+                        item.setAmount(item.getAmount() - 1);
+                        
+                        // Удаляем все эффекты радиации при получении костюма
+                        clearRadiationEffects(player);
+                        
+                        player.sendMessage(ChatColor.GREEN + "Вы получили полный комплект защитной брони!");
+                        player.sendMessage(ChatColor.GREEN + "Все эффекты радиации удалены!");
                     }
-
-                    ItemStack helmet = createArmorPiece(Material.LEATHER_HELMET, "Кислотостойкий шлем");
-                    ItemStack chestplate = createArmorPiece(Material.LEATHER_CHESTPLATE, "Кислотостойкая кираса");
-                    ItemStack leggings = createArmorPiece(Material.LEATHER_LEGGINGS, "Кислотостойкие поножи");
-                    ItemStack boots = createArmorPiece(Material.LEATHER_BOOTS, "Кислотостойкие ботинки");
-
-                    String[] colorParts = config.getString("protectionSuit.color", "50,200,50").split(",");
-                    Color color = Color.fromRGB(
-                            Integer.parseInt(colorParts[0].trim()),
-                            Integer.parseInt(colorParts[1].trim()),
-                            Integer.parseInt(colorParts[2].trim())
-                    );
-
-                    setArmorColor(helmet, color);
-                    setArmorColor(chestplate, color);
-                    setArmorColor(leggings, color);
-                    setArmorColor(boots, color);
-
-                    player.getInventory().addItem(helmet, chestplate, leggings, boots);
-                    item.setAmount(item.getAmount() - 1);
-                    player.sendMessage(ChatColor.GREEN + "Вы получили полный комплект защитной брони!");
                 }
             }
         }
@@ -642,29 +852,32 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
 
         clearEffects(player);
 
-        switch (zone) {
-            case 1:
-                player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 0));
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 1.0f);
-                break;
-            case 2:
-                player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 1));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 1));
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.8f);
-                break;
-            case 3:
-                player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 3));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 3));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 200, 3));
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.6f);
-                break;
-            case 4:
-                player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 9));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 9));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 200, 9));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 200, 9));
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.0f);
-                break;
+        World world = player.getWorld();
+        if (world != null) {
+            switch (zone) {
+                case 1:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 0));
+                    world.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 1.0f);
+                    break;
+                case 2:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 1));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 1));
+                    world.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.8f);
+                    break;
+                case 3:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 3));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 3));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 200, 3));
+                    world.playSound(player.getLocation(), Sound.ENTITY_PLAYER_HURT, 1.0f, 0.6f);
+                    break;
+                case 4:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 200, 9));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 200, 9));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 200, 9));
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.WITHER, 200, 9));
+                    world.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_GROWL, 0.5f, 1.0f);
+                    break;
+            }
         }
 
         player.damage(zone * 0.5);
@@ -675,6 +888,20 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         for (PotionEffect effect : player.getActivePotionEffects()) {
             player.removePotionEffect(effect.getType());
         }
+    }
+
+    private void clearRadiationEffects(Player player) {
+        // Удаляем все негативные эффекты радиации
+        player.removePotionEffect(PotionEffectType.POISON);
+        player.removePotionEffect(PotionEffectType.SLOWNESS);
+        player.removePotionEffect(PotionEffectType.BLINDNESS);
+        player.removePotionEffect(PotionEffectType.WITHER);
+        
+        // Очищаем данные о последнем времени эффектов
+        lastEffectTime.remove(player.getUniqueId());
+        currentZone.remove(player.getUniqueId());
+        
+
     }
 
     private void giveProtectionSuit(Player player) {
@@ -701,25 +928,27 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     private ItemStack createArmorPiece(Material material, String name) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.GREEN + name);
+        if (meta != null) {
+            meta.setDisplayName(ChatColor.GREEN + name);
 
-        meta.getPersistentDataContainer().set(
-                new NamespacedKey(this, "acidrain_protection"),
-                PersistentDataType.INTEGER,
-                1
-        );
+            meta.getPersistentDataContainer().set(
+                    new NamespacedKey(this, "acidrain_protection"),
+                    PersistentDataType.INTEGER,
+                    1
+            );
 
-        List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.GRAY + "Защищает от кислотных дождей");
-        lore.add(ChatColor.GRAY + "Длительность: " + config.getInt("protectionSuit.duration", 60) + " минут");
-        lore.add(ChatColor.YELLOW + "Осталось: " + getRemainingTimeForDisplay(
-                System.currentTimeMillis() + config.getInt("protectionSuit.duration", 60) * 60000L));
-        meta.setLore(lore);
+            List<String> lore = new ArrayList<>();
+            lore.add(ChatColor.GRAY + "Защищает от кислотных дождей");
+            lore.add(ChatColor.GRAY + "Длительность: " + config.getInt("protectionSuit.duration", 60) + " минут");
+            lore.add(ChatColor.YELLOW + "Осталось: " + getRemainingTimeForDisplay(
+                    System.currentTimeMillis() + config.getInt("protectionSuit.duration", 60) * 60000L));
+            meta.setLore(lore);
 
-        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
-        meta.setUnbreakable(true);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+            meta.setUnbreakable(true);
 
-        item.setItemMeta(meta);
+            item.setItemMeta(meta);
+        }
         return item;
     }
 
@@ -769,9 +998,92 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
         }
 
         if (command.equals("astatus")) {
-            String status = acidRainEnabled ? ChatColor.GREEN + "Включены" : ChatColor.RED + "Выключены";
-            sender.sendMessage(ChatColor.GOLD + "Статус кислотных дождей: " + status);
-            sender.sendMessage(ChatColor.GOLD + "Текущая граница: " + ChatColor.GREEN + dangerZoneStart + " блоков");
+            if (!sender.hasPermission("acidrain.admin")) {
+                sender.sendMessage(ChatColor.RED + "Недостаточно прав!");
+                return true;
+            }
+            
+            sender.sendMessage(ChatColor.GOLD + "╔══════════════════════════════════════╗");
+            sender.sendMessage(ChatColor.GOLD + "║           " + ChatColor.WHITE + "СТАТУС ACIDRAIN" + ChatColor.GOLD + "           ║");
+            sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
+            
+            // Статус системы
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Система: " + 
+                    (acidRainEnabled ? ChatColor.GREEN + "● АКТИВНА" : ChatColor.RED + "● ОТКЛЮЧЕНА") + 
+                    ChatColor.GOLD + " ║");
+            
+            // Статус расширения
+            if (isExpanding) {
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Расширение: " + ChatColor.YELLOW + "● В ПРОЦЕССЕ" + ChatColor.GOLD + " ║");
+            } else {
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Расширение: " + ChatColor.GREEN + "● СТАБИЛЬНО" + ChatColor.GOLD + " ║");
+            }
+            
+            sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "ГРАНИЦЫ ОПАСНЫХ ЗОН:" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
+            
+            // Зоны с более точной информацией
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.GREEN + "🛡️  Безопасная зона: " + 
+                    ChatColor.WHITE + "0 - " + dangerZoneStart + " блоков" + ChatColor.GOLD + " ║");
+            
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.YELLOW + "⚠️  Зона 1 (слабая): " + 
+                    ChatColor.WHITE + dangerZoneStart + " - " + (dangerZoneStart + zone1Radius) + " блоков" + ChatColor.GOLD + " ║");
+            
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.GOLD + "⚡ Зона 2 (средняя): " + 
+                    ChatColor.WHITE + (dangerZoneStart + zone1Radius) + " - " + (dangerZoneStart + zone2Radius) + " блоков" + ChatColor.GOLD + " ║");
+            
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.RED + "🔥 Зона 3 (сильная): " + 
+                    ChatColor.WHITE + (dangerZoneStart + zone2Radius) + " - " + (dangerZoneStart + zone3Radius) + " блоков" + ChatColor.GOLD + " ║");
+            
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.DARK_RED + "💀 Зона 4 (смертельная): " + 
+                    ChatColor.WHITE + (dangerZoneStart + zone3Radius) + "+ блоков" + ChatColor.GOLD + " ║");
+            
+            sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
+            
+            // Дополнительная информация
+            if (sender instanceof Player) {
+                Player player = (Player) sender;
+                int currentZone = getZoneForLocation(player.getLocation());
+                int distance = (int) player.getLocation().distance(new Location(player.getWorld(), 0, player.getLocation().getY(), 0));
+                
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Ваша позиция:" + ChatColor.GOLD + " ║");
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Расстояние: " + 
+                        ChatColor.YELLOW + distance + " блоков" + ChatColor.GOLD + " ║");
+                
+                String zoneName;
+                ChatColor zoneColor;
+                switch (currentZone) {
+                    case 0:
+                        zoneName = "Безопасная зона";
+                        zoneColor = ChatColor.GREEN;
+                        break;
+                    case 1:
+                        zoneName = "Зона 1 (слабая)";
+                        zoneColor = ChatColor.YELLOW;
+                        break;
+                    case 2:
+                        zoneName = "Зона 2 (средняя)";
+                        zoneColor = ChatColor.GOLD;
+                        break;
+                    case 3:
+                        zoneName = "Зона 3 (сильная)";
+                        zoneColor = ChatColor.RED;
+                        break;
+                    case 4:
+                        zoneName = "Зона 4 (смертельная)";
+                        zoneColor = ChatColor.DARK_RED;
+                        break;
+                    default:
+                        zoneName = "Неизвестно";
+                        zoneColor = ChatColor.GRAY;
+                }
+                
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Текущая зона: " + 
+                        zoneColor + zoneName + ChatColor.GOLD + " ║");
+            }
+            
+            sender.sendMessage(ChatColor.GOLD + "╚══════════════════════════════════════╝");
             return true;
         }
 
@@ -781,16 +1093,19 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage(ChatColor.RED + "Использование: /aexpand <блоки> <секунды>");
+                sender.sendMessage(ChatColor.RED + "Использование: /aexpand <блоки> <минуты>");
+                sender.sendMessage(ChatColor.YELLOW + "Пример: /aexpand 200 5 (расширить на 200 блоков за 5 минут)");
                 return true;
             }
             try {
                 int blocks = Integer.parseInt(args[0]);
-                int seconds = Integer.parseInt(args[1]);
+                int minutes = Integer.parseInt(args[1]);
+                int seconds = minutes * 60; // Конвертируем минуты в секунды
                 startExpansion(blocks, seconds);
-                sender.sendMessage(ChatColor.GREEN + "Расширение начато: +" + blocks + " блоков за " + seconds + " секунд");
+                sender.sendMessage(ChatColor.GREEN + "Расширение начато: +" + blocks + " блоков за " + minutes + " минут");
             } catch (NumberFormatException e) {
                 sender.sendMessage(ChatColor.RED + "Некорректные числовые значения!");
+                sender.sendMessage(ChatColor.YELLOW + "Пример: /aexpand 200 5");
             }
             return true;
         }
@@ -802,29 +1117,141 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             }
             if (args.length < 1) {
                 sender.sendMessage(ChatColor.RED + "Использование: /aset <блоки>");
+                sender.sendMessage(ChatColor.YELLOW + "Пример: /aset 2000 (установить границу безопасной зоны на 2000 блоков)");
                 return true;
             }
             try {
                 dangerZoneStart = Integer.parseInt(args[0]);
                 savePluginConfig();
-                sender.sendMessage(ChatColor.GREEN + "Граница установлена на " + dangerZoneStart + " блоков");
+                sender.sendMessage(ChatColor.GREEN + "Граница безопасной зоны установлена на " + dangerZoneStart + " блоков");
             } catch (NumberFormatException e) {
                 sender.sendMessage(ChatColor.RED + "Некорректное числовое значение!");
+                sender.sendMessage(ChatColor.YELLOW + "Пример: /aset 2000");
+            }
+            return true;
+        }
+
+        if (command.equals("arecipes")) {
+            if (!sender.hasPermission("acidrain.admin")) {
+                sender.sendMessage(ChatColor.RED + "Недостаточно прав!");
+                return true;
+            }
+            sender.sendMessage(ChatColor.GOLD + "=== Рецепты AcidRain ===");
+            sender.sendMessage(ChatColor.YELLOW + "Шлем: LLL, L L (L = кожа)");
+            sender.sendMessage(ChatColor.YELLOW + "Кираса: L L, LLL, LLL (L = кожа)");
+            sender.sendMessage(ChatColor.YELLOW + "Поножи: LLL, L L, L L (L = кожа)");
+            sender.sendMessage(ChatColor.YELLOW + "Ботинки: L L, L L (L = кожа)");
+            sender.sendMessage(ChatColor.GREEN + "Полный костюм:");
+            sender.sendMessage(ChatColor.GREEN + "NBT");
+            sender.sendMessage(ChatColor.GREEN + "VEV");
+            sender.sendMessage(ChatColor.GREEN + "LBL");
+            sender.sendMessage(ChatColor.AQUA + "N = Звезда Нижнего мира, B = Стержень бриза, T = Тотем бессмертия");
+            sender.sendMessage(ChatColor.AQUA + "V = Кожаный шлем, E = Кожаная кираса, L = Кожаные ботинки");
+            return true;
+        }
+
+        if (command.equals("atime")) {
+            if (!(sender instanceof Player)) {
+                sender.sendMessage(ChatColor.RED + "Эта команда только для игроков!");
+                return true;
+            }
+            Player player = (Player) sender;
+            UUID playerId = player.getUniqueId();
+            
+            if (suitExpirationTimes.containsKey(playerId)) {
+                long expireTime = suitExpirationTimes.get(playerId);
+                long remaining = expireTime - System.currentTimeMillis();
+                
+                if (remaining > 0) {
+                    long minutes = remaining / 60000;
+                    long seconds = (remaining % 60000) / 1000;
+                    boolean isWearing = hasFullSuit.getOrDefault(playerId, false);
+                    boolean isPaused = suitPauseTimes.containsKey(playerId);
+                    
+                    if (isWearing && !isPaused) {
+                        sender.sendMessage(ChatColor.GREEN + "Защитный костюм активен!");
+                        sender.sendMessage(ChatColor.YELLOW + "Осталось времени: " + minutes + " мин. " + seconds + " сек.");
+                    } else {
+                        sender.sendMessage(ChatColor.YELLOW + "Защитный костюм на паузе!");
+                        sender.sendMessage(ChatColor.YELLOW + "Осталось времени: " + minutes + " мин. " + seconds + " сек.");
+                    }
+                } else {
+                    sender.sendMessage(ChatColor.RED + "Время действия костюма истекло!");
+                }
+            } else {
+                sender.sendMessage(ChatColor.GRAY + "У вас нет активного защитного костюма.");
             }
             return true;
         }
 
         if (command.equals("acidrain")) {
-            sender.sendMessage(ChatColor.GOLD + "===== AcidRain v1.0 =====");
-            sender.sendMessage(ChatColor.YELLOW + "/asuit - Получить защитный костюм");
-            sender.sendMessage(ChatColor.YELLOW + "/aon - Включить кислотные дожди");
-            sender.sendMessage(ChatColor.YELLOW + "/aoff - Выключить кислотные дожди");
-            sender.sendMessage(ChatColor.YELLOW + "/astatus - Статус системы");
-            sender.sendMessage(ChatColor.YELLOW + "/aexpand <блоки> <секунды> - Расширить зону");
-            sender.sendMessage(ChatColor.YELLOW + "/aset <блоки> - Установить границу");
+            sender.sendMessage(ChatColor.GOLD + "===== AcidRain v1.0b =====");
+            sender.sendMessage(ChatColor.AQUA + "Граница: " + ChatColor.GREEN + dangerZoneStart + ChatColor.AQUA + " блоков");
+            sender.sendMessage("");
+            sender.sendMessage(ChatColor.YELLOW + "Команды:");
+            sender.sendMessage(ChatColor.GREEN + "/asuit" + ChatColor.WHITE + " - Получить защитный костюм");
+            sender.sendMessage(ChatColor.GREEN + "/aon" + ChatColor.WHITE + " - Включить кислотные дожди");
+            sender.sendMessage(ChatColor.GREEN + "/aoff" + ChatColor.WHITE + " - Выключить кислотные дожди");
+            sender.sendMessage(ChatColor.GREEN + "/astatus" + ChatColor.WHITE + " - Статус системы");
+            sender.sendMessage(ChatColor.GREEN + "/aexpand <блоки> <минуты>" + ChatColor.WHITE + " - Расширить зону");
+            sender.sendMessage(ChatColor.GREEN + "/aset <блоки>" + ChatColor.WHITE + " - Установить границу");
+            sender.sendMessage(ChatColor.GREEN + "/arecipes" + ChatColor.WHITE + " - Показать рецепты");
+            sender.sendMessage(ChatColor.GREEN + "/atime" + ChatColor.WHITE + " - Проверить время костюма");
+            sender.sendMessage("");
+            sender.sendMessage(ChatColor.YELLOW + "Discord: " + ChatColor.BLUE + "https://discord.gg/gV2KmUbqXC");
             return true;
         }
 
         return false;
+    }
+
+    @Override
+    public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
+        List<String> completions = new ArrayList<>();
+        
+        if (args.length == 1) {
+            // Автодополнение для основной команды /acidrain
+            if (cmd.getName().equalsIgnoreCase("acidrain")) {
+                completions.add("status");
+                completions.add("on");
+                completions.add("off");
+                completions.add("set");
+                completions.add("expand");
+                completions.add("suit");
+                completions.add("recipes");
+            }
+        } else if (args.length == 2) {
+            // Автодополнение для команды /aexpand (блоки)
+            if (cmd.getName().equalsIgnoreCase("aexpand")) {
+                completions.add("50");
+                completions.add("100");
+                completions.add("200");
+                completions.add("300");
+                completions.add("500");
+            }
+            // Автодополнение для команды /aset
+            else if (cmd.getName().equalsIgnoreCase("aset")) {
+                completions.add("1000");
+                completions.add("2000");
+                completions.add("3000");
+                completions.add("4000");
+                completions.add("5000");
+            }
+        } else if (args.length == 3) {
+            // Автодополнение для второго параметра /aexpand (минуты)
+            if (cmd.getName().equalsIgnoreCase("aexpand")) {
+                completions.add("1");
+                completions.add("2");
+                completions.add("5");
+                completions.add("10");
+                completions.add("15");
+            }
+        }
+        
+        // Фильтруем результаты по введенному тексту
+        String input = args[args.length - 1].toLowerCase();
+        completions.removeIf(s -> !s.toLowerCase().startsWith(input));
+        
+        return completions;
     }
 }
