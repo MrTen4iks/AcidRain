@@ -3,7 +3,7 @@ version: 1.0b
 main: org.acidRain.acidRain.AcidRain
 api-version: "1.21"
 authors: [Flaim and SubTeams]
-description: Advanced acid rain system with auto-expanding borders and protection suits. Join our Discord: https://discord.gg/gV2KmUbqXC
+description: "Advanced acid rain system with auto-expanding borders and protection suits. Join our Discord: https://discord.gg/gV2KmUbqXC"
 website: https://discord.gg/gV2KmUbqXC
 
 commands:
