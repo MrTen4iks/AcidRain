@@ -39,6 +39,10 @@ commands:
     description: Показать информацию о рецептах
     usage: /arecipes
     permission: acidrain.admin
+  atime:
+    description: Проверить оставшееся время защитного костюма
+    usage: /atime
+    permission: acidrain.suit
 
 permissions:
   acidrain.admin:
