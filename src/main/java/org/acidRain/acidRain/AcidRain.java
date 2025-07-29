@@ -1,4 +1,3 @@
-}
 package org.acidRain.acidRain;
 
 import org.bukkit.*;
@@ -498,6 +497,9 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             );
         }
         
+        // Создаем массовый дождь из частиц на 100 блоков во всех направлениях
+        spawnMassiveAcidRain(world, center, zone);
+        
         // Добавляем звуковой эффект кислотного дождя (редко)
         if (config.getBoolean("acidRainEffects.soundEnabled", true)) {
             int soundChance = config.getInt("acidRainEffects.soundChance", 5);
@@ -507,6 +509,32 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                 world.playSound(center, Sound.WEATHER_RAIN, volume, pitch);
             }
         }
+    }
+    
+    private void spawnMassiveAcidRain(World world, Location center, int zone) {
+        // Используем точно такой же формат как в команде /particle minecraft:campfire_cosy_smoke ~ ~ ~ 50 50 50 0.01 9000
+        int particleCount = 10000 + (zone * 2500); // 12500, 15000, 17500, 20000
+        
+        // Получаем координаты игрока
+        int x = center.getBlockX();
+        int y = center.getBlockY();
+        int z = center.getBlockZ();
+        
+        // Север (отрицательный Z)
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), 
+            "particle minecraft:dust 0 1 0 1 " + x + " " + y + " " + z + " 50 50 50 0.01 " + particleCount);
+        
+        // Юг (положительный Z)  
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+            "particle minecraft:dust 0 1 0 1 " + x + " " + y + " " + z + " 50 50 50 0.01 " + particleCount);
+        
+        // Запад (отрицательный X)
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+            "particle minecraft:dust 0 1 0 1 " + x + " " + y + " " + z + " 50 50 50 0.01 " + particleCount);
+        
+        // Восток (положительный X)
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+            "particle minecraft:dust 0 1 0 1 " + x + " " + y + " " + z + " 50 50 50 0.01 " + particleCount);
     }
 
     private void spawnProtectionParticles(Player player) {
@@ -1013,32 +1041,50 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                     (acidRainEnabled ? ChatColor.GREEN + "● АКТИВНА" : ChatColor.RED + "● ОТКЛЮЧЕНА") + 
                     ChatColor.GOLD + " ║");
             
-            // Статус расширения
+            // Статус расширения с более точной информацией
             if (isExpanding) {
                 sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Расширение: " + ChatColor.YELLOW + "● В ПРОЦЕССЕ" + ChatColor.GOLD + " ║");
+                if (expansionTask != null) {
+                    sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Авто-расширение: " + ChatColor.YELLOW + "● АКТИВНО" + ChatColor.GOLD + " ║");
+                }
             } else {
                 sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Расширение: " + ChatColor.GREEN + "● СТАБИЛЬНО" + ChatColor.GOLD + " ║");
+                if (autoExpandTask != null) {
+                    sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Авто-расширение: " + ChatColor.GREEN + "● АКТИВНО" + ChatColor.GOLD + " ║");
+                } else {
+                    sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Авто-расширение: " + ChatColor.RED + "● ОТКЛЮЧЕНО" + ChatColor.GOLD + " ║");
+                }
             }
             
             sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "ГРАНИЦЫ ОПАСНЫХ ЗОН:" + ChatColor.GOLD + " ║");
             sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
             
-            // Зоны с более точной информацией
+            // Зоны с более точной информацией и координатами
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.GREEN + "🛡️  Безопасная зона: " + 
                     ChatColor.WHITE + "0 - " + dangerZoneStart + " блоков" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                    ChatColor.GRAY + "±" + dangerZoneStart + " X/Z" + ChatColor.GOLD + " ║");
             
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.YELLOW + "⚠️  Зона 1 (слабая): " + 
                     ChatColor.WHITE + dangerZoneStart + " - " + (dangerZoneStart + zone1Radius) + " блоков" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                    ChatColor.GRAY + "±" + (dangerZoneStart + zone1Radius) + " X/Z" + ChatColor.GOLD + " ║");
             
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.GOLD + "⚡ Зона 2 (средняя): " + 
                     ChatColor.WHITE + (dangerZoneStart + zone1Radius) + " - " + (dangerZoneStart + zone2Radius) + " блоков" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                    ChatColor.GRAY + "±" + (dangerZoneStart + zone2Radius) + " X/Z" + ChatColor.GOLD + " ║");
             
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.RED + "🔥 Зона 3 (сильная): " + 
                     ChatColor.WHITE + (dangerZoneStart + zone2Radius) + " - " + (dangerZoneStart + zone3Radius) + " блоков" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                    ChatColor.GRAY + "±" + (dangerZoneStart + zone3Radius) + " X/Z" + ChatColor.GOLD + " ║");
             
             sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.DARK_RED + "💀 Зона 4 (смертельная): " + 
                     ChatColor.WHITE + (dangerZoneStart + zone3Radius) + "+ блоков" + ChatColor.GOLD + " ║");
+            sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                    ChatColor.GRAY + "±" + (dangerZoneStart + zone4Radius) + " X/Z" + ChatColor.GOLD + " ║");
             
             sender.sendMessage(ChatColor.GOLD + "╠══════════════════════════════════════╣");
             
@@ -1049,7 +1095,11 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                 int distance = (int) player.getLocation().distance(new Location(player.getWorld(), 0, player.getLocation().getY(), 0));
                 
                 sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "Ваша позиция:" + ChatColor.GOLD + " ║");
-                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Расстояние: " + 
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Координаты: " + 
+                        ChatColor.YELLOW + "X:" + player.getLocation().getBlockX() + 
+                        " Y:" + player.getLocation().getBlockY() + 
+                        " Z:" + player.getLocation().getBlockZ() + ChatColor.GOLD + " ║");
+                sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Расстояние от центра: " + 
                         ChatColor.YELLOW + distance + " блоков" + ChatColor.GOLD + " ║");
                 
                 String zoneName;
@@ -1082,6 +1132,38 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                 
                 sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  Текущая зона: " + 
                         zoneColor + zoneName + ChatColor.GOLD + " ║");
+                
+                // Показываем расстояние до следующей зоны
+                int distanceToNextZone = 0;
+                String nextZoneInfo = "";
+                switch (currentZone) {
+                    case 0:
+                        distanceToNextZone = dangerZoneStart - distance;
+                        nextZoneInfo = "до Зоны 1";
+                        break;
+                    case 1:
+                        distanceToNextZone = (dangerZoneStart + zone1Radius) - distance;
+                        nextZoneInfo = "до Зоны 2";
+                        break;
+                    case 2:
+                        distanceToNextZone = (dangerZoneStart + zone2Radius) - distance;
+                        nextZoneInfo = "до Зоны 3";
+                        break;
+                    case 3:
+                        distanceToNextZone = (dangerZoneStart + zone3Radius) - distance;
+                        nextZoneInfo = "до Зоны 4";
+                        break;
+                    case 4:
+                        nextZoneInfo = "Вы в самой опасной зоне!";
+                        break;
+                }
+                
+                if (currentZone < 4) {
+                    sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  " + nextZoneInfo + ": " + 
+                            ChatColor.YELLOW + distanceToNextZone + " блоков" + ChatColor.GOLD + " ║");
+                } else {
+                    sender.sendMessage(ChatColor.GOLD + "║ " + ChatColor.WHITE + "  " + nextZoneInfo + ChatColor.GOLD + " ║");
+                }
             }
             
             sender.sendMessage(ChatColor.GOLD + "╚══════════════════════════════════════╝");
