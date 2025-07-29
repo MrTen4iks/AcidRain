@@ -1,57 +1,41 @@
-name: AcidRain
-version: 1.0b
-main: org.acidRain.acidRain.AcidRain
-api-version: "1.21"
-authors: [Flaim and SubTeams]
-description: "Advanced acid rain system with auto-expanding borders and protection suits. Join our Discord: https://discord.gg/gV2KmUbqXC"
-website: https://discord.gg/gV2KmUbqXC
+# Основные настройки
+dangerZoneStart: 1100  # Начальный размер безопасной зоны (в блоках от 0,0)
+effectRadius: 100      # Радиус эффектов около границы
+acidRainEnabled: true  # Включены ли кислотные осадки по умолчанию
 
-commands:
-  acidrain:
-    description: Основная команда плагина AcidRain
-    usage: /acidrain [on|off|set|expand|status]
-    permission: acidrain.admin
-  aon:
-    description: Включить кислотные дожди
-    usage: /aon
-    permission: acidrain.admin
-  aoff:
-    description: Выключить кислотные дожди
-    usage: /aoff
-    permission: acidrain.admin
-  aset:
-    description: Установить границу кислотных осадков
-    usage: /aset <размер>
-    permission: acidrain.admin
-  aexpand:
-    description: Расширить границу
-    usage: /aexpand <блоки> <секунды>
-    permission: acidrain.admin
-  astatus:
-    description: Показать текущий статус
-    usage: /astatus
-    permission: acidrain.admin
-  asuit:
-    description: Получить защитный костюм от кислотных дождей
-    usage: /asuit
-    permission: acidrain.admin
-  arecipes:
-    description: Показать информацию о рецептах
-    usage: /arecipes
-    permission: acidrain.admin
-  atime:
-    description: Проверить оставшееся время защитного костюма
-    usage: /atime
-    permission: acidrain.suit
+# Настройки автоматического расширения
+autoExpand:
+  enabled: true        # Включено ли автоматическое расширение
+  triggerHour: 14      # Время срабатывания (14:00 по Москве)
+  minBlocks: 50        # Минимальное расширение (блоки)
+  maxBlocks: 80        # Максимальное расширение (блоки)
+  minTime: 300         # Минимальное время расширения (секунды)
+  maxTime: 600         # Максимальное время расширения (секунды)
 
-permissions:
-  acidrain.admin:
-    description: Полный доступ к командам управления
-    default: op
-  acidrain.notify:
-    description: Получать уведомления о расширении границы
-    default: true
-  acidrain.suit:
-    description: Доступ к защитному костюму
-    default: opтуп к защитному костюму
-    default: op
+# Настройки зон
+zones:
+  zone1:
+    radius: 300        # 1100-1400 блоков
+  zone2:
+    radius: 750        # 1400-1850 блоков
+  zone3:
+    radius: 1500       # 1850-2600 блоков
+  zone4:
+    radius: 3000       # 2600+ блоков
+
+# Настройки защитного костюма
+protectionSuit:
+  duration: 60         # Длительность защиты в минутах
+  color: 50,200,50     # RGB цвет брони
+
+# Настройки кислотного дождя
+acidRainEffects:
+  enabled: true
+  rainIntensity: 20
+  rainRadius: 3.0
+  soundEnabled: true
+  soundChance: 5
+
+# Сообщения
+notifications:
+  expandMessage: "&6[AcidRain] &cГраница расширяется на &e{blocks} &cблоков за &e{minutes} &cминут!"
