@@ -119,11 +119,11 @@ commands:
     leggings: "Поножи: LLL, L L, L L (L = кожа)"
     boots: "Ботинки: L L, L L (L = кожа)"
     full_suit: "Полный костюм:"
-    full_suit_shape_1: "NBT"
-    full_suit_shape_2: "VEV"
-    full_suit_shape_3: "LBL"
-    full_suit_legend_1: "N = Звезда Нижнего мира, B = Стержень бриза, T = Тотем бессмертия"
-    full_suit_legend_2: "V = Кожаный шлем, E = Кожаная кираса, L = Кожаные ботинки"
+    full_suit_shape_1: "PEB"
+    full_suit_shape_2: "RTR"
+    full_suit_shape_3: "HNC"
+    full_suit_legend_1: "E = Кристал Энда, R = Стержень бриза, T = Тотем бессмертия, N = Незеритовый слиток"
+    full_suit_legend_2: "H = Кожаный шлем, C = Кожаная кираса, L = Кожаные штаны, B = Кожаные ботинки"
 
 # Уведомления
 notifications:
