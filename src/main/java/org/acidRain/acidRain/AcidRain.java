@@ -208,13 +208,15 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
                     createFullProtectionSuit()
             );
 
-            fullSuitRecipe.shape("NBT", "VEV", "LBL");
-            fullSuitRecipe.setIngredient('N', Material.NETHER_STAR);
-            fullSuitRecipe.setIngredient('B', Material.BREEZE_ROD);
+            fullSuitRecipe.shape("PEB", "RTR", "HNC");
+            fullSuitRecipe.setIngredient('E', Material.END_CRYSTAL);
+            fullSuitRecipe.setIngredient('R', Material.BREEZE_ROD);
             fullSuitRecipe.setIngredient('T', Material.TOTEM_OF_UNDYING);
-            fullSuitRecipe.setIngredient('V', Material.LEATHER_HELMET);
-            fullSuitRecipe.setIngredient('E', Material.LEATHER_CHESTPLATE);
-            fullSuitRecipe.setIngredient('L', Material.LEATHER_BOOTS);
+            fullSuitRecipe.setIngredient('N', Material.NETHERITE_INGOT);
+            fullSuitRecipe.setIngredient('H', Material.LEATHER_HELMET);
+            fullSuitRecipe.setIngredient('C', Material.LEATHER_CHESTPLATE);
+            fullSuitRecipe.setIngredient('P', Material.LEATHER_LEGGINGS);
+            fullSuitRecipe.setIngredient('B', Material.LEATHER_BOOTS);
 
             getServer().addRecipe(fullSuitRecipe);
             getLogger().info("Рецепт полного костюма зарегистрирован");
@@ -225,7 +227,7 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
     }
 
     private ItemStack createFullProtectionSuit() {
-        ItemStack resultItem = new ItemStack(Material.NETHER_STAR);
+        ItemStack resultItem = new ItemStack(Material.KNOWLEDGE_BOOK);
         ItemMeta meta = resultItem.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(ChatColor.GREEN + "Набор защиты от кислотных дождей");
@@ -1142,11 +1144,11 @@ public final class AcidRain extends JavaPlugin implements Listener, CommandExecu
             sender.sendMessage(ChatColor.YELLOW + "Поножи: LLL, L L, L L (L = кожа)");
             sender.sendMessage(ChatColor.YELLOW + "Ботинки: L L, L L (L = кожа)");
             sender.sendMessage(ChatColor.GREEN + "Полный костюм:");
-            sender.sendMessage(ChatColor.GREEN + "NBT");
-            sender.sendMessage(ChatColor.GREEN + "VEV");
-            sender.sendMessage(ChatColor.GREEN + "LBL");
-            sender.sendMessage(ChatColor.AQUA + "N = Звезда Нижнего мира, B = Стержень бриза, T = Тотем бессмертия");
-            sender.sendMessage(ChatColor.AQUA + "V = Кожаный шлем, E = Кожаная кираса, L = Кожаные ботинки");
+            sender.sendMessage(ChatColor.GREEN + "LEB");
+            sender.sendMessage(ChatColor.GREEN + "RTR");
+            sender.sendMessage(ChatColor.GREEN + "HNC");
+            sender.sendMessage(ChatColor.AQUA + "E = Кристал Энда, R = Стержень бриза, T = Тотем бессмертия, N = Незеритовый слиток");
+            sender.sendMessage(ChatColor.AQUA + "H = Кожаный шлем, C = Кожаная кираса, L = Кожаные штаны, B = Кожаные ботинки");
             return true;
         }
 
