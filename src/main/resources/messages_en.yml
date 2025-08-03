@@ -119,11 +119,11 @@ commands:
     leggings: "Leggings: LLL, L L, L L (L = leather)"
     boots: "Boots: L L, L L (L = leather)"
     full_suit: "Full suit:"
-    full_suit_shape_1: "NBT"
-    full_suit_shape_2: "VEV"
-    full_suit_shape_3: "LBL"
-    full_suit_legend_1: "N = Nether Star, B = Breeze Rod, T = Totem of Undying"
-    full_suit_legend_2: "V = Leather Helmet, E = Leather Chestplate, L = Leather Boots"
+    full_suit_shape_1: "PEB"
+    full_suit_shape_2: "RTR"
+    full_suit_shape_3: "LHNC"
+    full_suit_legend_1: "E = End Crystal, R = Breeze Rod, T = Totem of Undying, N = netherite ingot"
+    full_suit_legend_2: "H = Leather Helmet, C = Leather Chestplate, L = Leather leggings, B = Leather Boots"
 
 # Notifications
 notifications:
