@@ -1,0 +1,145 @@
+# AcidRain - English localization
+# All plugin messages in English
+
+# Console messages
+console:
+  startup:
+    title: "ACID RAIN SYSTEM"
+    subtitle: "Advanced Acid Rain System v1.1b"
+    border: "Border: {0} blocks"
+    discord: "Discord: https://discord.gg/gV2KmUbqXC"
+    authors: "Authors: Flaim and SubTeams"
+    success: "✅ AcidRain successfully loaded!"
+    join_discord: "💬 Join our Discord: https://discord.gg/gV2KmUbqXC"
+  shutdown:
+    title: "ACID RAIN SYSTEM"
+    subtitle: "Advanced Acid Rain System v1.1b"
+    disabled: "PLUGIN DISABLED"
+    discord: "Discord: https://discord.gg/gV2KmUbqXC"
+    success: "❌ AcidRain disabled!"
+  errors:
+    save_protection: "Error saving protection time: {0}"
+    save_config: "Error saving config: {0}"
+    recipe_registration: "Error registering recipes: {0}"
+    player_processing: "Error processing player {0}: {1}"
+  info:
+    remove_expired: "Removing expired protection for player: {0}"
+    invalid_uuid: "Invalid UUID in config: {0}"
+    helmet_recipe: "Helmet recipe registered"
+    chestplate_recipe: "Chestplate recipe registered"
+    leggings_recipe: "Leggings recipe registered"
+    boots_recipe: "Boots recipe registered"
+    full_suit_recipe: "Full suit recipe registered"
+
+# Player messages
+player:
+  errors:
+    players_only: "This command is for players only!"
+    no_permission: "Insufficient permissions!"
+    invalid_number: "Invalid numeric value!"
+    invalid_numbers: "Invalid numeric values!"
+    no_inventory_space: "Not enough inventory space!"
+    reload_failed: "Error reloading plugin: {0}"
+  success:
+    acid_rain_enabled: "Acid rain enabled!"
+    acid_rain_disabled: "Acid rain disabled!"
+    expansion_started: "Expansion started: +{0} blocks over {1} minutes"
+    border_set: "Safe zone border set to {0} blocks"
+    suit_activated: "Protection suit activated for {0} minutes!"
+    suit_activated_short: "Protection suit activated!"
+    radiation_cleared: "All radiation effects removed!"
+    suit_paused: "Protection suit removed. Timer paused."
+    suit_destroyed: "Your protection suit was destroyed by acid rain!"
+    suit_received: "You received a full set of protective armor!"
+    reload_success: "Done"
+  info:
+    safe_zone: "■ Safe Zone ■"
+    dangerous_zone: "Warning! Acid Zone Level {0}"
+    zone_1: "⚠ Zone 1 (weak)"
+    zone_2: "⚡ Zone 2 (medium)"
+    zone_3: "🔥 Zone 3 (strong)"
+    zone_4: "💀 Zone 4 (deadly)"
+    suit_active: "Protection suit active!"
+    suit_paused_status: "Protection suit paused!"
+    time_remaining: "Time remaining: {0} min. {1} sec."
+    suit_expired: "Suit duration expired!"
+    no_active_suit: "You don't have an active protection suit."
+
+# Commands
+commands:
+  usage:
+    aexpand: "Usage: /aexpand <blocks> <minutes>"
+    aexpand_example: "Example: /aexpand 200 5 (expand by 200 blocks over 5 minutes)"
+    aexpand_example_short: "Example: /aexpand 200 5"
+    aset: "Usage: /aset <blocks>"
+    aset_example: "Example: /aset 2000 (set safe zone border to 2000 blocks)"
+    aset_example_short: "Example: /aset 2000"
+  
+  acidrain:
+    title: "===== AcidRain v1.1b ====="
+    border: "Border: {0} blocks"
+    commands_title: "Commands:"
+    asuit: "/asuit - Get protection suit"
+    aon: "/aon - Enable acid rain"
+    aoff: "/aoff - Disable acid rain"
+    astatus: "/astatus - System status"
+    aexpand: "/aexpand <blocks> <minutes> - Expand zone"
+    aset: "/aset <blocks> - Set border"
+    arecipes: "/arecipes - Show recipes"
+    atime: "/atime - Check suit time"
+    rload: "/rload - Reload plugin"
+    adiscord: "/adiscord - Discord server"
+    alang: "/alang <ru|en> - Change language"
+    discord: "Discord: {0}"
+    discord_message: "💬 Join our Discord server: {0}"
+    language_changed: "Plugin language changed to: {0}"
+    language_usage: "Usage: /alang <ru|en>"
+    language_example: "Example: /alang en (switch to English)"
+    language_current: "Current language: {0}"
+    language_available: "Available languages: ru, en"
+  
+  astatus:
+    title: "ACIDRAIN STATUS"
+    system: "System: {0}"
+    expansion_in_progress: "Expansion: ● IN PROGRESS"
+    expansion_stable: "Expansion: ● STABLE"
+    auto_expansion_active: "Auto-expansion: ● ACTIVE"
+    auto_expansion_disabled: "Auto-expansion: ● DISABLED"
+    zone_boundaries: "DANGEROUS ZONE BOUNDARIES:"
+    safe_zone: "🛡 Safe Zone: ±{0} blocks"
+    zone_1: "⚠ Zone 1 (weak): ±{0} blocks"
+    zone_2: "⚡ Zone 2 (medium): ±{0} blocks"
+    zone_3: "🔥 Zone 3 (strong): ±{0} blocks"
+    zone_4: "💀 Zone 4 (deadly): ±{0} blocks"
+    coordinates: "Coordinates: ±{0}/±{1}"
+    your_position: "Your position:"
+    your_coordinates: "Coordinates: {0}, {1}, {2}"
+    distance_from_center: "Distance from center: {0} blocks"
+    current_zone: "Current zone: {0}"
+    distance_to_next: "Distance to next zone: {0} blocks"
+    in_safe_zone: "You are in the safe zone"
+  
+  arecipes:
+    title: "=== AcidRain Recipes ==="
+    helmet: "Helmet: LLL, L L (L = leather)"
+    chestplate: "Chestplate: L L, LLL, LLL (L = leather)"
+    leggings: "Leggings: LLL, L L, L L (L = leather)"
+    boots: "Boots: L L, L L (L = leather)"
+    full_suit: "Full suit:"
+    full_suit_shape_1: "PEB"
+    full_suit_shape_2: "RTR"
+    full_suit_shape_3: "LHNC"
+    full_suit_legend_1: "E = End Crystal, R = Breeze Rod, T = Totem of Undying, N = netherite ingot"
+    full_suit_legend_2: "H = Leather Helmet, C = Leather Chestplate, L = Leather leggings, B = Leather Boots"
+
+# Notifications
+notifications:
+  expand_message: "&6[AcidRain] &cBorder expanding by &e{0} &cblocks over &e{1} &cminutes!"
+
+# Item names
+items:
+  full_suit_name: "Acid Season Protection Kit"
+  helmet_name: "Protective Helmet"
+  chestplate_name: "Protective Chestplate"
+  leggings_name: "Protective Leggings"
+  boots_name: "Protective Boots" 
