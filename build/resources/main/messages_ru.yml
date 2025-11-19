@@ -1,22 +1,22 @@
-# AcidRain - Русская локализация
+# AcidOfRain - Русская локализация
 # Все сообщения плагина на русском языке
 
 # Консольные сообщения
 console:
   startup:
     title: "ACID RAIN SYSTEM"
-    subtitle: "Advanced Acid Rain System v1.1b"
+    subtitle: "Advanced Acid Rain System v1.5"
     border: "Граница: {0} блоков"
-    discord: "Discord: https://discord.gg/gV2KmUbqXC"
+    discord: "Discord: https://discord.gg/uDzyXP28cy"
     authors: "Авторы: Flaim and SubTeams"
-    success: "✅ AcidRain успешно загружен!"
-    join_discord: "💬 Присоединяйтесь к нашему Discord: https://discord.gg/gV2KmUbqXC"
+    success: "✅ AcidOfRain успешно загружен!"
+    join_discord: "💬 Присоединяйтесь к нашему Discord: https://discord.gg/uDzyXP28cy"
   shutdown:
     title: "ACID RAIN SYSTEM"
-    subtitle: "Advanced Acid Rain System v1.1b"
+    subtitle: "Advanced Acid Rain System v1.5"
     disabled: "ПЛАГИН ВЫКЛЮЧЕН"
-    discord: "Discord: https://discord.gg/gV2KmUbqXC"
-    success: "❌ AcidRain выключен!"
+    discord: "Discord: https://discord.gg/uDzyXP28cy"
+    success: "❌ AcidOfRain выключен!"
   errors:
     save_protection: "Ошибка сохранения времени защиты: {0}"
     save_config: "Ошибка сохранения конфига: {0}"
@@ -76,7 +76,7 @@ commands:
     aset_example_short: "Пример: /aset 2000"
   
   acidrain:
-    title: "===== AcidRain v1.1b ====="
+    title: "===== AcidOfRain v1.5 ====="
     border: "Граница: {0} блоков"
     commands_title: "Команды:"
     asuit: "/asuit - Получить защитный костюм"
@@ -92,6 +92,7 @@ commands:
     alang: "/alang <ru|en> - Изменить язык"
     discord: "Discord: {0}"
     discord_message: "💬 Присоединяйтесь к нашему Discord серверу: {0}"
+    telegram_message: "📱 Присоединяйтесь к нашему Telegram каналу: {0}"
     language_changed: "Язык плагина изменен на: {0}"
     language_usage: "Использование: /alang <ru|en>"
     language_example: "Пример: /alang en (переключить на английский)"
@@ -99,18 +100,30 @@ commands:
     language_available: "Доступные языки: ru, en"
   
   astatus:
-    title: "СТАТУС ACIDRAIN"
+    title: "СТАТУС ACIDOFRAIN"
     system: "Система: {0}"
+    system_active: "● АКТИВНА"
+    system_disabled: "● ОТКЛЮЧЕНА"
     expansion_in_progress: "Расширение: ● В ПРОЦЕССЕ"
     expansion_stable: "Расширение: ● СТАБИЛЬНО"
+    realtime_update_warning: " ⚠ Координаты обновляются в реальном времени!"
+    expanding_indicator: " [РАСШИРЯЕТСЯ]"
     auto_expansion_active: "Авто-расширение: ● АКТИВНО"
     auto_expansion_disabled: "Авто-расширение: ● ОТКЛЮЧЕНО"
     zone_boundaries: "ГРАНИЦЫ ОПАСНЫХ ЗОН:"
     safe_zone: "🛡 Безопасная зона: ±{0} блоков"
+    safe_zone_label: "Безопасная зона:"
     zone_1: "⚠ Зона 1 (слабая): ±{0} блоков"
+    zone_1_label: "Зона 1 (слабая):"
     zone_2: "⚡ Зона 2 (средняя): ±{0} блоков"
+    zone_2_label: "Зона 2 (средняя):"
     zone_3: "🔥 Зона 3 (сильная): ±{0} блоков"
+    zone_3_label: "Зона 3 (сильная):"
     zone_4: "💀 Зона 4 (смертельная): ±{0} блоков"
+    zone_4_label: "Зона 4 (смертельная):"
+    blocks_word: "блоков"
+    from_word: "от"
+    to_word: "до"
     coordinates: "Координаты: ±{0}/±{1}"
     your_position: "Ваша позиция:"
     your_coordinates: "Координаты: {0}, {1}, {2}"
@@ -120,7 +133,7 @@ commands:
     in_safe_zone: "Вы находитесь в безопасной зоне"
   
   arecipes:
-    title: "=== Рецепты AcidRain ==="
+    title: "=== Рецепты AcidOfRain ==="
     helmet: "Шлем: LLL, L L (L = кожа)"
     chestplate: "Кираса: L L, LLL, LLL (L = кожа)"
     leggings: "Поножи: LLL, L L, L L (L = кожа)"
@@ -134,7 +147,7 @@ commands:
 
 # Уведомления
 notifications:
-  expand_message: "&6[AcidRain] &cГраница расширяется на &e{0} &cблоков за &e{1} &cминут!"
+  expand_message: "&6[AcidOfRain] &cГраница расширяется на &e{0} &cблоков за &e{1} &cминут!"
 
 # Названия предметов
 items:

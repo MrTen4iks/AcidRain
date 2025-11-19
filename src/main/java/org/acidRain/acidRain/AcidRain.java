@@ -105,7 +105,7 @@ public final class AcidRain extends JavaPlugin {
     }
 
     private void registerCommands() {
-        String[] commands = {"acidrain", "aon", "aoff", "aset", "aexpand", "astatus", "asuit", "arecipes", "atime", "adiscord", "alang"};
+        String[] commands = {"acidrain", "aon", "aoff", "aset", "aexpand", "astatus", "asuit", "arecipes", "atime", "adiscord", "atg_dex", "alang"};
         for (String cmd : commands) {
             org.bukkit.command.PluginCommand command = getCommand(cmd);
             if (command != null) {

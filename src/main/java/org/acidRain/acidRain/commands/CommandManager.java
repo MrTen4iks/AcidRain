@@ -11,6 +11,7 @@ import org.acidRain.acidRain.world.ZoneManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -68,6 +69,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
                 return handleTimeCommand(sender);
             case "adiscord":
                 return handleDiscordCommand(sender);
+            case "atg_dex":
+                return handleTelegramCommand(sender);
             case "alang":
                 return handleLangCommand(sender, args);
             case "acidrain":
@@ -125,8 +128,8 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.GOLD + "");
         
         String systemStatus = acidRainEnabled ? 
-            ChatColor.GREEN + "● АКТИВНА" : 
-            ChatColor.RED + "● ОТКЛЮЧЕНА";
+            ChatColor.GREEN + localizationManager.getMessage("commands.astatus.system_active") : 
+            ChatColor.RED + localizationManager.getMessage("commands.astatus.system_disabled");
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.WHITE + 
             localizationManager.getMessage("commands.astatus.system", systemStatus) + 
             ChatColor.GOLD + " ");
@@ -136,7 +139,7 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         if (expanding) {
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.WHITE + 
                 localizationManager.getMessage("commands.astatus.expansion_in_progress") + 
-                ChatColor.YELLOW + " ⚠ Координаты обновляются в реальном времени!" +
+                ChatColor.YELLOW + localizationManager.getMessage("commands.astatus.realtime_update_warning") +
                 ChatColor.GOLD + "");
         } else {
             sender.sendMessage(ChatColor.GOLD + "" + ChatColor.WHITE + 
@@ -148,9 +151,16 @@ public class CommandManager implements CommandExecutor, TabCompleter {
             localizationManager.getMessage("commands.astatus.zone_boundaries") + 
             ChatColor.GOLD + " ");
         
-        // Показываем точные координаты границ зон (автоматически обновляются во время расширения)
-        // Координаты берутся напрямую из ZoneManager, который обновляется в реальном времени
-        int safeZoneBorder = zoneManager.getDangerZoneStart();
+        // Определяем мир игрока для проверки ада
+        World playerWorld = null;
+        if (sender instanceof Player) {
+            playerWorld = ((Player) sender).getWorld();
+        }
+        
+        // Получаем безопасную зону с учетом мира (в аду -8 блоков)
+        int safeZoneBorder = zoneManager.getDangerZoneStartForWorld(playerWorld);
+        
+        // Показываем все зоны (в аду безопасная зона на 8 блоков меньше)
         int zone1Radius = zoneManager.getZone1Radius(); // Обновляется во время расширения
         int zone2Radius = zoneManager.getZone2Radius(); // Автоматически пересчитывается
         int zone3Radius = zoneManager.getZone3Radius(); // Автоматически пересчитывается
@@ -163,36 +173,39 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         
         // Показываем точные координаты: ±X блоков (от -X до +X)
         // Все координаты автоматически обновляются во время расширения
-        String expandingIndicator = expanding ? ChatColor.YELLOW + " [РАСШИРЯЕТСЯ]" : "";
+        String expandingIndicator = expanding ? ChatColor.YELLOW + localizationManager.getMessage("commands.astatus.expanding_indicator") : "";
+        String blocksWord = localizationManager.getMessage("commands.astatus.blocks_word");
+        String fromWord = localizationManager.getMessage("commands.astatus.from_word");
+        String toWord = localizationManager.getMessage("commands.astatus.to_word");
         
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.GREEN + "🛡 " + 
-            ChatColor.WHITE + "Безопасная зона: " + ChatColor.GREEN + "±" + safeZoneBorder + 
-            ChatColor.WHITE + " блоков " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + safeZoneBorder + 
-            ChatColor.GRAY + " до " + ChatColor.YELLOW + "+" + safeZoneBorder + ChatColor.GRAY + ")" + 
+            ChatColor.WHITE + localizationManager.getMessage("commands.astatus.safe_zone_label") + " " + ChatColor.GREEN + "±" + safeZoneBorder + 
+            ChatColor.WHITE + " " + blocksWord + " " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + safeZoneBorder + 
+            ChatColor.GRAY + " " + toWord + " " + ChatColor.YELLOW + "+" + safeZoneBorder + ChatColor.GRAY + ")" + 
             expandingIndicator + ChatColor.GOLD + " ");
         
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.YELLOW + "⚠ " + 
-            ChatColor.WHITE + "Зона 1 (слабая): " + ChatColor.YELLOW + "±" + zone1Border + 
-            ChatColor.WHITE + " блоков " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone1Border + 
-            ChatColor.GRAY + " до " + ChatColor.YELLOW + "+" + zone1Border + ChatColor.GRAY + ")" + 
+            ChatColor.WHITE + localizationManager.getMessage("commands.astatus.zone_1_label") + " " + ChatColor.YELLOW + "±" + zone1Border + 
+            ChatColor.WHITE + " " + blocksWord + " " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone1Border + 
+            ChatColor.GRAY + " " + toWord + " " + ChatColor.YELLOW + "+" + zone1Border + ChatColor.GRAY + ")" + 
             expandingIndicator + ChatColor.GOLD + "");
         
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.GOLD + "⚡ " + 
-            ChatColor.WHITE + "Зона 2 (средняя): " + ChatColor.GOLD + "±" + zone2Border + 
-            ChatColor.WHITE + " блоков " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone2Border + 
-            ChatColor.GRAY + " до " + ChatColor.YELLOW + "+" + zone2Border + ChatColor.GRAY + ")" + 
+            ChatColor.WHITE + localizationManager.getMessage("commands.astatus.zone_2_label") + " " + ChatColor.GOLD + "±" + zone2Border + 
+            ChatColor.WHITE + " " + blocksWord + " " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone2Border + 
+            ChatColor.GRAY + " " + toWord + " " + ChatColor.YELLOW + "+" + zone2Border + ChatColor.GRAY + ")" + 
             expandingIndicator + ChatColor.GOLD + " ");
         
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.RED + "🔥 " + 
-            ChatColor.WHITE + "Зона 3 (сильная): " + ChatColor.RED + "±" + zone3Border + 
-            ChatColor.WHITE + " блоков " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone3Border + 
-            ChatColor.GRAY + " до " + ChatColor.YELLOW + "+" + zone3Border + ChatColor.GRAY + ")" + 
+            ChatColor.WHITE + localizationManager.getMessage("commands.astatus.zone_3_label") + " " + ChatColor.RED + "±" + zone3Border + 
+            ChatColor.WHITE + " " + blocksWord + " " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone3Border + 
+            ChatColor.GRAY + " " + toWord + " " + ChatColor.YELLOW + "+" + zone3Border + ChatColor.GRAY + ")" + 
             expandingIndicator + ChatColor.GOLD + " ");
         
         sender.sendMessage(ChatColor.GOLD + "" + ChatColor.DARK_RED + "💀 " + 
-            ChatColor.WHITE + "Зона 4 (смертельная): " + ChatColor.DARK_RED + "±" + zone4Border + 
-            ChatColor.WHITE + " блоков " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone4Border + 
-            ChatColor.GRAY + " до " + ChatColor.YELLOW + "+" + zone4Border + ChatColor.GRAY + ")" + 
+            ChatColor.WHITE + localizationManager.getMessage("commands.astatus.zone_4_label") + " " + ChatColor.DARK_RED + "±" + zone4Border + 
+            ChatColor.WHITE + " " + blocksWord + " " + ChatColor.GRAY + "(" + ChatColor.YELLOW + "-" + zone4Border + 
+            ChatColor.GRAY + " " + toWord + " " + ChatColor.YELLOW + "+" + zone4Border + ChatColor.GRAY + ")" + 
             expandingIndicator + ChatColor.GOLD + " ");
 
         if (sender instanceof Player) {
@@ -317,11 +330,14 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     }
 
     private boolean handleDiscordCommand(CommandSender sender) {
-        if (!sender.hasPermission("acidrain.admin")) {
-            sender.sendMessage(ChatColor.RED + localizationManager.getMessage("player.errors.no_permission"));
-            return true;
-        }
-        sender.sendMessage(ChatColor.GOLD + localizationManager.getMessage("commands.discord_message", "https://discord.gg/gV2KmUbqXC"));
+        // Команда доступна всем игрокам
+        sender.sendMessage(ChatColor.GOLD + localizationManager.getMessage("commands.acidrain.discord_message", "https://discord.gg/gV2KmUbqXC"));
+        return true;
+    }
+
+    private boolean handleTelegramCommand(CommandSender sender) {
+        // Команда тихая - отправляет сообщение только отправителю, не в чат
+        sender.sendMessage(ChatColor.GOLD + localizationManager.getMessage("commands.acidrain.telegram_message", "https://t.me/tg_dexoron"));
         return true;
     }
 
@@ -359,16 +375,29 @@ public class CommandManager implements CommandExecutor, TabCompleter {
         sender.sendMessage(ChatColor.AQUA + localizationManager.getMessage("commands.acidrain.border", zoneManager.getDangerZoneStart()));
         sender.sendMessage("");
         sender.sendMessage(ChatColor.YELLOW + localizationManager.getMessage("commands.acidrain.commands_title"));
-        sender.sendMessage(ChatColor.GREEN + "/asuit" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.asuit"));
-        sender.sendMessage(ChatColor.GREEN + "/aon" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aon"));
-        sender.sendMessage(ChatColor.GREEN + "/aoff" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aoff"));
-        sender.sendMessage(ChatColor.GREEN + "/astatus" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.astatus"));
-        sender.sendMessage(ChatColor.GREEN + "/aexpand <блоки> <минуты>" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aexpand"));
-        sender.sendMessage(ChatColor.GREEN + "/aset <блоки>" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aset"));
-        sender.sendMessage(ChatColor.GREEN + "/arecipes" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.arecipes"));
-        sender.sendMessage(ChatColor.GREEN + "/atime" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.atime"));
+        
+        boolean hasAdminPermission = sender.hasPermission("acidrain.admin");
+        boolean hasSuitPermission = sender.hasPermission("acidrain.suit");
+        
+        // Показываем только команды, к которым у игрока есть доступ
+        if (hasAdminPermission) {
+            sender.sendMessage(ChatColor.GREEN + "/asuit" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.asuit"));
+            sender.sendMessage(ChatColor.GREEN + "/aon" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aon"));
+            sender.sendMessage(ChatColor.GREEN + "/aoff" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.aoff"));
+            sender.sendMessage(ChatColor.GREEN + "/astatus" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.astatus"));
+            sender.sendMessage(ChatColor.GREEN + localizationManager.getMessage("commands.acidrain.aexpand"));
+            sender.sendMessage(ChatColor.GREEN + localizationManager.getMessage("commands.acidrain.aset"));
+            sender.sendMessage(ChatColor.GREEN + "/arecipes" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.arecipes"));
+            sender.sendMessage(ChatColor.GREEN + "/alang <ru|en>" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.alang"));
+        }
+        
+        if (hasSuitPermission) {
+            sender.sendMessage(ChatColor.GREEN + "/atime" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.atime"));
+        }
+        
+        // Команды adiscord и atg_dex доступны всем
         sender.sendMessage(ChatColor.GREEN + "/adiscord" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.adiscord"));
-        sender.sendMessage(ChatColor.GREEN + "/alang <ru|en>" + ChatColor.WHITE + " - " + localizationManager.getMessage("commands.acidrain.alang"));
+        
         sender.sendMessage("");
         sender.sendMessage(ChatColor.YELLOW + localizationManager.getMessage("commands.acidrain.discord", "https://discord.gg/gV2KmUbqXC"));
         return true;
@@ -382,40 +411,65 @@ public class CommandManager implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
         List<String> completions = new ArrayList<>();
         
+        // Проверяем права доступа для команд с permission
+        String commandName = cmd.getName().toLowerCase();
+        boolean hasAdminPermission = sender.hasPermission("acidrain.admin");
+        boolean hasSuitPermission = sender.hasPermission("acidrain.suit");
+        
+        // Команды adiscord и atg_dex доступны всем, остальные требуют прав
+        if (!commandName.equals("adiscord") && !commandName.equals("atg_dex")) {
+            if (commandName.equals("atime") && !hasSuitPermission) {
+                return completions; // Нет прав на atime
+            }
+            if (!commandName.equals("atime") && !hasAdminPermission) {
+                return completions; // Нет прав на админские команды
+            }
+        }
+        
         if (args.length == 1) {
             if (cmd.getName().equalsIgnoreCase("acidrain")) {
-                completions.add("status");
-                completions.add("on");
-                completions.add("off");
-                completions.add("set");
-                completions.add("expand");
-                completions.add("suit");
-                completions.add("recipes");
+                if (hasAdminPermission) {
+                    completions.add("status");
+                    completions.add("on");
+                    completions.add("off");
+                    completions.add("set");
+                    completions.add("expand");
+                    completions.add("suit");
+                    completions.add("recipes");
+                }
             } else if (cmd.getName().equalsIgnoreCase("alang")) {
-                completions.add("ru");
-                completions.add("en");
+                if (hasAdminPermission) {
+                    completions.add("ru");
+                    completions.add("en");
+                }
             }
         } else if (args.length == 2) {
             if (cmd.getName().equalsIgnoreCase("aexpand")) {
-                completions.add("50");
-                completions.add("100");
-                completions.add("200");
-                completions.add("300");
-                completions.add("500");
+                if (hasAdminPermission) {
+                    completions.add("50");
+                    completions.add("100");
+                    completions.add("200");
+                    completions.add("300");
+                    completions.add("500");
+                }
             } else if (cmd.getName().equalsIgnoreCase("aset")) {
-                completions.add("1000");
-                completions.add("2000");
-                completions.add("3000");
-                completions.add("4000");
-                completions.add("5000");
+                if (hasAdminPermission) {
+                    completions.add("1000");
+                    completions.add("2000");
+                    completions.add("3000");
+                    completions.add("4000");
+                    completions.add("5000");
+                }
             }
         } else if (args.length == 3) {
             if (cmd.getName().equalsIgnoreCase("aexpand")) {
-                completions.add("1");
-                completions.add("2");
-                completions.add("5");
-                completions.add("10");
-                completions.add("15");
+                if (hasAdminPermission) {
+                    completions.add("1");
+                    completions.add("2");
+                    completions.add("5");
+                    completions.add("10");
+                    completions.add("15");
+                }
             }
         }
         

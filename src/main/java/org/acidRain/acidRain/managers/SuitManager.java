@@ -83,10 +83,13 @@ public class SuitManager {
     }
 
     public void startProtectionTimer(Player player) {
+        UUID playerId = player.getUniqueId();
         long duration = configManager.getConfig().getInt("protectionSuit.duration", 60) * 60000L;
-        suitExpirationTimes.put(player.getUniqueId(), System.currentTimeMillis() + duration);
-        hasFullSuit.put(player.getUniqueId(), true);
-        suitPauseTimes.remove(player.getUniqueId());
+        
+        // Всегда начинаем таймер заново при надевании нового костюма
+        suitExpirationTimes.put(playerId, System.currentTimeMillis() + duration);
+        hasFullSuit.put(playerId, true);
+        suitPauseTimes.remove(playerId);
         updateArmorLore(player);
 
         clearRadiationEffects(player);
@@ -127,10 +130,20 @@ public class SuitManager {
     public void damageSuit(Player player) {
         UUID playerId = player.getUniqueId();
 
-        if (suitExpirationTimes.containsKey(playerId) &&
-                System.currentTimeMillis() >= suitExpirationTimes.get(playerId)) {
+        // Проверяем что таймер истек
+        if (!suitExpirationTimes.containsKey(playerId)) {
+            return;
+        }
+        
+        long expireTime = suitExpirationTimes.get(playerId);
+        if (System.currentTimeMillis() < expireTime) {
+            return; // Таймер еще не истек
+        }
 
-            for (ItemStack item : player.getInventory().getArmorContents()) {
+        // Ломаем всю броню с защитой
+        ItemStack[] armor = player.getInventory().getArmorContents();
+        if (armor != null) {
+            for (ItemStack item : armor) {
                 if (item != null && item.hasItemMeta()) {
                     ItemMeta meta = item.getItemMeta();
                     if (meta != null && meta.getPersistentDataContainer().has(
@@ -140,14 +153,19 @@ public class SuitManager {
                     }
                 }
             }
-
-            suitExpirationTimes.remove(playerId);
-            hasFullSuit.remove(playerId);
-            if (player.getWorld() != null) {
-                player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
-            }
-            player.sendMessage(ChatColor.RED + localizationManager.getMessage("player.success.suit_destroyed"));
+            // Обновляем слоты брони
+            player.getInventory().setArmorContents(armor);
         }
+
+        // Удаляем данные о костюме
+        suitExpirationTimes.remove(playerId);
+        hasFullSuit.remove(playerId);
+        suitPauseTimes.remove(playerId);
+        
+        if (player.getWorld() != null) {
+            player.playSound(player.getLocation(), org.bukkit.Sound.ENTITY_ITEM_BREAK, 1.0f, 1.0f);
+        }
+        player.sendMessage(ChatColor.RED + localizationManager.getMessage("player.success.suit_destroyed"));
     }
 
     public void updateArmorLore(Player player) {
@@ -192,6 +210,10 @@ public class SuitManager {
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.SLOWNESS);
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.BLINDNESS);
         player.removePotionEffect(org.bukkit.potion.PotionEffectType.WITHER);
+        player.removePotionEffect(org.bukkit.potion.PotionEffectType.HUNGER);
+        player.removePotionEffect(org.bukkit.potion.PotionEffectType.NAUSEA);
+        player.removePotionEffect(org.bukkit.potion.PotionEffectType.WEAKNESS);
+        player.removePotionEffect(org.bukkit.potion.PotionEffectType.MINING_FATIGUE);
     }
 
     public boolean hasFullSuit(UUID playerId) {
@@ -199,10 +221,22 @@ public class SuitManager {
     }
 
     public boolean hasActiveProtection(UUID playerId) {
-        return hasFullSuit.getOrDefault(playerId, false) &&
-                suitExpirationTimes.containsKey(playerId) &&
-                System.currentTimeMillis() < suitExpirationTimes.get(playerId) &&
-                !suitPauseTimes.containsKey(playerId);
+        // Проверяем что таймер активен и не истек
+        if (!suitExpirationTimes.containsKey(playerId)) {
+            return false;
+        }
+        
+        long expireTime = suitExpirationTimes.get(playerId);
+        if (System.currentTimeMillis() >= expireTime) {
+            return false; // Таймер истек
+        }
+        
+        if (suitPauseTimes.containsKey(playerId)) {
+            return false; // Таймер на паузе
+        }
+        
+        // Проверяем что костюм действительно надет
+        return hasFullSuit.getOrDefault(playerId, false);
     }
 
     public Long getExpirationTime(UUID playerId) {

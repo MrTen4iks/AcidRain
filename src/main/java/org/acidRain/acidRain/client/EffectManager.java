@@ -31,34 +31,42 @@ public class EffectManager {
         UUID playerId = player.getUniqueId();
         boolean wearingFullSuit = suitManager.checkFullSuit(player);
 
+        // Проверяем состояние костюма
         if (!wearingFullSuit && suitManager.hasFullSuit(playerId)) {
             suitManager.pauseProtectionTimer(player);
-            return;
         }
 
         if (wearingFullSuit) {
             Long expireTime = suitManager.getExpirationTime(playerId);
 
             if (expireTime == null) {
+                // Новый костюм - начинаем таймер заново
                 suitManager.startProtectionTimer(player);
-                return;
-            }
-
-            if (System.currentTimeMillis() >= expireTime) {
+                clearEffects(player); // Удаляем все эффекты при надевании нового костюма
+            } else if (System.currentTimeMillis() >= expireTime) {
+                // Таймер истек - ломаем броню
                 suitManager.damageSuit(player);
-                return;
+                clearEffects(player); // Удаляем эффекты после разрушения брони
+            } else {
+                suitManager.updateArmorLore(player);
             }
-
-            suitManager.updateArmorLore(player);
         }
 
+        // Всегда проверяем зону и применяем эффекты (независимо от костюма)
         int zone = zoneManager.getZoneForLocation(player.getLocation());
+        boolean protectionActive = suitManager.hasActiveProtection(playerId);
+        
         if (zone > 0) {
-            boolean protectionActive = suitManager.hasActiveProtection(playerId);
-
             if (!protectionActive) {
+                // Нет активной защиты - применяем эффекты зоны
                 applyZoneEffects(player, zone);
+            } else {
+                // Защита активна - удаляем эффекты радиации (но не все эффекты, чтобы не мешать другим плагинам)
+                clearRadiationEffects(player);
             }
+        } else {
+            // В безопасной зоне удаляем эффекты радиации
+            clearRadiationEffects(player);
         }
     }
 
@@ -115,6 +123,7 @@ public class EffectManager {
 
         clearEffects(player);
 
+        // Применяем эффекты во всех мирах (обычный мир, ад, энд)
         if (player.getWorld() != null) {
             switch (zone) {
                 case 1:

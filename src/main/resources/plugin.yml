@@ -48,11 +48,13 @@ commands:
   adiscord:
     description: Показать ссылку на Discord сервер
     usage: /adiscord
-    permission: acidrain.admin
   alang:
     description: Изменить язык плагина
     usage: /alang <ru|en>
     permission: acidrain.admin
+  atg_dex:
+    description: Показать ссылку на Telegram канал
+    usage: /atg_dex
 
 permissions:
   acidrain.admin:

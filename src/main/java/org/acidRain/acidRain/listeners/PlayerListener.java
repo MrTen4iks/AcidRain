@@ -47,12 +47,17 @@ public class PlayerListener implements Listener {
                 boolean nowWearing = suitManager.checkFullSuit(player);
 
                 if (nowWearing && !wasWearing) {
-                    if (suitManager.getExpirationTime(player.getUniqueId()) == null) {
+                    // Игрок надел костюм
+                    Long expireTime = suitManager.getExpirationTime(player.getUniqueId());
+                    if (expireTime == null || System.currentTimeMillis() >= expireTime) {
+                        // Новый костюм или старый истек - начинаем таймер заново
                         suitManager.startProtectionTimer(player);
                     } else {
+                        // Старый костюм еще активен - возобновляем таймер
                         suitManager.resumeProtectionTimer(player);
                     }
                 } else if (!nowWearing && wasWearing) {
+                    // Игрок снял костюм
                     suitManager.pauseProtectionTimer(player);
                 }
             }, 1L);

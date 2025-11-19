@@ -1,22 +1,22 @@
-# AcidRain - English localization
+# AcidOfRain - English localization
 # All plugin messages in English
 
 # Console messages
 console:
   startup:
     title: "ACID RAIN SYSTEM"
-    subtitle: "Advanced Acid Rain System v1.1b"
+    subtitle: "Advanced Acid Rain System v1.5"
     border: "Border: {0} blocks"
-    discord: "Discord: https://discord.gg/gV2KmUbqXC"
+    discord: "Discord: https://discord.gg/uDzyXP28cy"
     authors: "Authors: Flaim and SubTeams"
-    success: "✅ AcidRain successfully loaded!"
-    join_discord: "💬 Join our Discord: https://discord.gg/gV2KmUbqXC"
+    success: "✅ AcidOfRain successfully loaded!"
+    join_discord: "💬 Join our Discord: https://discord.gg/uDzyXP28cy"
   shutdown:
     title: "ACID RAIN SYSTEM"
-    subtitle: "Advanced Acid Rain System v1.1b"
+    subtitle: "Advanced Acid Rain System v1.5"
     disabled: "PLUGIN DISABLED"
-    discord: "Discord: https://discord.gg/gV2KmUbqXC"
-    success: "❌ AcidRain disabled!"
+    discord: "Discord: https://discord.gg/uDzyXP28cy"
+    success: "❌ AcidOfRain disabled!"
   errors:
     save_protection: "Error saving protection time: {0}"
     save_config: "Error saving config: {0}"
@@ -76,7 +76,7 @@ commands:
     aset_example_short: "Example: /aset 2000"
   
   acidrain:
-    title: "===== AcidRain v1.1b ====="
+    title: "===== AcidOfRain v1.5 ====="
     border: "Border: {0} blocks"
     commands_title: "Commands:"
     asuit: "/asuit - Get protection suit"
@@ -92,6 +92,7 @@ commands:
     alang: "/alang <ru|en> - Change language"
     discord: "Discord: {0}"
     discord_message: "💬 Join our Discord server: {0}"
+    telegram_message: "📱 Join our Telegram channel: {0}"
     language_changed: "Plugin language changed to: {0}"
     language_usage: "Usage: /alang <ru|en>"
     language_example: "Example: /alang en (switch to English)"
@@ -99,18 +100,30 @@ commands:
     language_available: "Available languages: ru, en"
   
   astatus:
-    title: "ACIDRAIN STATUS"
+    title: "ACIDOFRAIN STATUS"
     system: "System: {0}"
+    system_active: "● ACTIVE"
+    system_disabled: "● DISABLED"
     expansion_in_progress: "Expansion: ● IN PROGRESS"
     expansion_stable: "Expansion: ● STABLE"
+    realtime_update_warning: " ⚠ Coordinates updating in real-time!"
+    expanding_indicator: " [EXPANDING]"
     auto_expansion_active: "Auto-expansion: ● ACTIVE"
     auto_expansion_disabled: "Auto-expansion: ● DISABLED"
     zone_boundaries: "DANGEROUS ZONE BOUNDARIES:"
     safe_zone: "🛡 Safe Zone: ±{0} blocks"
+    safe_zone_label: "Safe Zone:"
     zone_1: "⚠ Zone 1 (weak): ±{0} blocks"
+    zone_1_label: "Zone 1 (weak):"
     zone_2: "⚡ Zone 2 (medium): ±{0} blocks"
+    zone_2_label: "Zone 2 (medium):"
     zone_3: "🔥 Zone 3 (strong): ±{0} blocks"
+    zone_3_label: "Zone 3 (strong):"
     zone_4: "💀 Zone 4 (deadly): ±{0} blocks"
+    zone_4_label: "Zone 4 (deadly):"
+    blocks_word: "blocks"
+    from_word: "from"
+    to_word: "to"
     coordinates: "Coordinates: ±{0}/±{1}"
     your_position: "Your position:"
     your_coordinates: "Coordinates: {0}, {1}, {2}"
@@ -120,7 +133,7 @@ commands:
     in_safe_zone: "You are in the safe zone"
   
   arecipes:
-    title: "=== AcidRain Recipes ==="
+    title: "=== AcidOfRain Recipes ==="
     helmet: "Helmet: LLL, L L (L = leather)"
     chestplate: "Chestplate: L L, LLL, LLL (L = leather)"
     leggings: "Leggings: LLL, L L, L L (L = leather)"
@@ -134,7 +147,7 @@ commands:
 
 # Notifications
 notifications:
-  expand_message: "&6[AcidRain] &cBorder expanding by &e{0} &cblocks over &e{1} &cminutes!"
+  expand_message: "&6[AcidOfRain] &cBorder expanding by &e{0} &cblocks over &e{1} &cminutes!"
 
 # Item names
 items:
